@@ -1,0 +1,6 @@
+{
+  "name": "AgriKnowledge Hub",
+  "description": "Comprehensive agricultural information, farming management, Kenyan crop & livestock guides, interactive calculators, expert advisory, and market directory platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
