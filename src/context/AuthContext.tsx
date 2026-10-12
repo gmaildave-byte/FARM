@@ -1,16 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { UserRole, UserProfile } from '../types';
+import { UserRole, UserProfile, NotificationItem } from '../types';
 
 interface AuthContextType {
   user: UserProfile | null;
   role: UserRole;
   setRole: (role: UserRole) => void;
+  updateProfile: (updated: Partial<UserProfile>) => void;
   login: (email: string, name?: string, role?: UserRole) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  notifications: NotificationItem[];
+  markNotificationRead: (id: string) => void;
 }
 
-const mockProfiles: Record<UserRole, UserProfile> = {
+export const mockProfiles: Record<UserRole, UserProfile> = {
   guest: {
     id: 'user-guest',
     username: 'guest',
@@ -118,22 +121,52 @@ const mockProfiles: Record<UserRole, UserProfile> = {
   },
   admin: {
     id: 'user-admin-1',
-    username: 'admin_agrihub',
-    name: 'System Administrator (AgriHub)',
-    email: 'admin@agriknowledge.co.ke',
+    username: 'adams_kering',
+    name: 'Adams Kipkoech Kering',
+    email: 'adams.kering@agriknowledge.co.ke',
     role: 'admin',
     userType: 'agribusiness',
-    county: 'Nairobi',
+    county: 'Uasin Gishu',
     country: 'Kenya',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
-    bio: 'Platform systems & content administration supervisor.',
-    farmingInterests: ['All Farming Sectors', 'National Agronomy Data'],
+    bio: 'Founder & Full-Stack Agricultural Technology Developer of AgriKnowledge Hub. Dedicated to advancing farmer livelihoods and agricultural market access across Kenya and Africa.',
+    farmingInterests: ['All Farming Sectors', 'National Agronomy Data', 'AgTech Systems'],
     joinedDate: '2023-01-01',
-    followersCount: 3500,
-    followingCount: 200,
+    followersCount: 4200,
+    followingCount: 210,
     verifiedBadge: true,
   }
 };
+
+const initialNotifications: NotificationItem[] = [
+  {
+    id: 'notif-1',
+    userId: 'user-farmer-1',
+    type: 'like',
+    title: 'New Like on Harvest Post',
+    message: 'Sarah M. liked your post "Drying down our SC Duma maize crop after early rains 🌽".',
+    read: false,
+    createdAt: '10m ago'
+  },
+  {
+    id: 'notif-2',
+    userId: 'user-farmer-1',
+    type: 'comment',
+    title: 'New Agronomy Reply',
+    message: 'Dr. Beatrice Wambui replied to your enquiry about soil pH liming in Eldoret.',
+    read: false,
+    createdAt: '1h ago'
+  },
+  {
+    id: 'notif-3',
+    userId: 'user-farmer-1',
+    type: 'enquiry',
+    title: 'New Marketplace Buyer Enquiry',
+    message: 'David Omondi requested quote for 15 crates of Anna F1 tomatoes.',
+    read: true,
+    createdAt: '1d ago'
+  }
+];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -144,32 +177,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [user, setUser] = useState<UserProfile | null>(() => {
+    const savedProfile = localStorage.getItem('agri_user_profile');
+    if (savedProfile) {
+      try {
+        return JSON.parse(savedProfile);
+      } catch (e) {
+        // Fallback
+      }
+    }
     const initialRole = (localStorage.getItem('agri_role') as UserRole) || 'farmer';
     return mockProfiles[initialRole] || mockProfiles.farmer;
   });
 
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
+    const saved = localStorage.getItem('agri_notifications');
+    return saved ? JSON.parse(saved) : initialNotifications;
+  });
+
   const setRole = (newRole: UserRole) => {
     setRoleState(newRole);
-    setUser(mockProfiles[newRole]);
+    const profile = mockProfiles[newRole];
+    setUser(profile);
     localStorage.setItem('agri_role', newRole);
+    localStorage.setItem('agri_user_profile', JSON.stringify(profile));
   };
 
-  const login = (email: string, name = 'Registered User', userRole: UserRole = 'farmer') => {
+  const updateProfile = (updated: Partial<UserProfile>) => {
+    if (!user) return;
+    const next = { ...user, ...updated };
+    setUser(next);
+    localStorage.setItem('agri_user_profile', JSON.stringify(next));
+  };
+
+  const login = (email: string, name = 'Adams Kipkoech Kering', userRole: UserRole = 'farmer') => {
+    const base = mockProfiles[userRole] || mockProfiles.farmer;
     const newUser: UserProfile = {
+      ...base,
       id: `user-${Date.now()}`,
       name,
       email,
       role: userRole,
-      county: 'Uasin Gishu',
-      farmName: 'My Family Farm',
     };
     setUser(newUser);
     setRoleState(userRole);
     localStorage.setItem('agri_role', userRole);
+    localStorage.setItem('agri_user_profile', JSON.stringify(newUser));
   };
 
   const logout = () => {
     setRole('guest');
+  };
+
+  const markNotificationRead = (id: string) => {
+    setNotifications(prev => {
+      const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
+      localStorage.setItem('agri_notifications', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   return (
@@ -178,9 +242,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         role,
         setRole,
+        updateProfile,
         login,
         logout,
         isAuthenticated: role !== 'guest',
+        notifications,
+        markNotificationRead,
       }}
     >
       {children}

@@ -1,6 +1,6 @@
 {
   "name": "AgriKnowledge Hub",
-  "description": "Comprehensive agricultural information, farming management, Kenyan crop & livestock guides, interactive calculators, expert advisory, and market directory platform.",
+  "description": "Professional agricultural information, farming community, agricultural marketplace, crop & livestock guides, interactive calculators, and agronomy advisory platform founded by Adams Kipkoech Kering.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -49,7 +49,8 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
             </div>
           </div>
           <p className="text-xs sm:text-sm text-stone-400 leading-relaxed pr-4">
-            An all-in-one digital agricultural and farm management platform dedicated to empowering smallholders, commercial growers, livestock keepers, and agribusinesses in Kenya with verified agricultural knowledge, practical tools, and market transparency.
+            <strong>Trusted Agricultural Knowledge. Stronger Farming. Better Markets.</strong><br />
+            An integrated digital agricultural platform founded and developed by <strong>Adams Kipkoech Kering</strong>, dedicated to empowering smallholders, commercial growers, livestock keepers, and agribusinesses in Kenya with verified agricultural knowledge, 26 practical farming tools, and direct marketplace trade.
           </p>
 
           {/* Newsletter Box */}
@@ -220,7 +221,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
       <div className="border-t border-stone-800 py-4 px-4 sm:px-8 text-center text-xs text-stone-400">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
           <div>
-            © {new Date().getFullYear()} AgriKnowledge Hub (Kenya). All Rights Reserved.
+            © {new Date().getFullYear()} AgriKnowledge Hub (Kenya) • Founded & Developed by Adams Kipkoech Kering.
           </div>
           <div className="flex gap-4">
             <button onClick={() => setCurrentPage('about')} className="hover:text-stone-300">

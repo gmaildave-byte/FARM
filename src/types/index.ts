@@ -134,26 +134,35 @@ export interface MarketplaceListing {
   sellerId: string;
   sellerUsername: string;
   sellerName: string;
-  sellerAvatar: string;
-  sellerVerified: boolean;
+  sellerAvatar?: string;
+  sellerVerified?: boolean;
+  sellerPhone?: string;
+  sellerRating?: number;
   title: string;
-  type: ListingType;
+  type?: ListingType;
   category: string;
   subcategory?: string;
   description: string;
   priceKES: number;
-  pricingUnit: string;
+  pricingUnit?: string;
+  unit?: string;
   isNegotiable?: boolean;
   county: string;
+  subCounty?: string;
   specificLocation?: string;
   images: string[];
   quantityAvailable?: number;
   quantityUnit?: string;
-  deliveryOption: 'Pickup only' | 'Seller delivers' | 'Courier / Freight arranged' | 'On-site service';
+  deliveryOption?: 'Pickup only' | 'Seller delivers' | 'Courier / Freight arranged' | 'On-site service';
+  deliveryTerms?: string;
+  paymentTerms?: string;
   deliveryFeeKES?: number;
+  verifiedSeller?: boolean;
   status: 'active' | 'sold' | 'booked' | 'paused';
   createdAt: string;
   enquiriesCount?: number;
+  savesCount?: number;
+  isSaved?: boolean;
 }
 
 export interface DirectMessage {
@@ -183,10 +192,14 @@ export interface Conversation {
 
 export interface NotificationItem {
   id: string;
-  type: 'follow' | 'like' | 'comment' | 'message' | 'enquiry';
+  userId?: string;
+  type: 'follow' | 'like' | 'comment' | 'message' | 'enquiry' | 'system';
   title: string;
-  description: string;
-  timestamp: string;
+  description?: string;
+  message?: string;
+  link?: string;
+  timestamp?: string;
+  createdAt?: string;
   read: boolean;
   targetUsername?: string;
   targetPostId?: string;
@@ -366,6 +379,48 @@ export interface MarketPrice {
   trend: 'up' | 'down' | 'stable';
 }
 
+export type MarketplaceCategory =
+  | 'seeds'
+  | 'fertilizers'
+  | 'machinery'
+  | 'irrigation'
+  | 'feeds'
+  | 'livestock'
+  | 'produce'
+  | 'transport'
+  | 'consulting'
+  | 'veterinary'
+  | 'mechanization'
+  | 'processing';
+
+export interface BuyerEnquiry {
+  id: string;
+  listingId: string;
+  listingTitle: string;
+  buyerId: string;
+  buyerName: string;
+  buyerPhone: string;
+  buyerEmail?: string;
+  sellerId: string;
+  message: string;
+  quantity?: string;
+  createdAt: string;
+  status: 'pending' | 'responded' | 'closed';
+}
+
+export interface ReportItem {
+  id: string;
+  targetType: 'post' | 'listing' | 'user';
+  targetId: string;
+  targetTitle: string;
+  reportedBy: string;
+  reason: 'spam' | 'prohibited_goods' | 'misleading_claim' | 'scam' | 'harassment' | 'unrelated';
+  details: string;
+  createdAt: string;
+  status: 'pending' | 'reviewed' | 'action_taken' | 'dismissed';
+  actionNote?: string;
+}
+
 export interface ProduceListing {
   id: string;
   title: string;
@@ -468,9 +523,12 @@ export interface ExpertQuestion {
 
 export interface ForumPost {
   id: string;
+  authorId?: string;
   authorName: string;
+  authorUsername?: string;
   authorInitials?: string;
   authorRole: string;
+  authorAvatar?: string;
   location?: string;
   county: string;
   category: 'Crops' | 'Dairy & Livestock' | 'Soil & Fertilizers' | 'Markets & Prices' | 'General Farming';
@@ -480,12 +538,15 @@ export interface ForumPost {
   timestamp: string;
   likes: number;
   isLiked?: boolean;
+  isBookmarked?: boolean;
   commentsCount?: number;
   tags: string[];
   replies: {
     id: string;
     author: string;
+    authorUsername?: string;
     authorRole: string;
+    authorAvatar?: string;
     text: string;
     timestamp: string;
   }[];

@@ -8,7 +8,11 @@ import {
   Phone,
   MapPin,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  User,
+  Award,
+  Globe,
+  Code
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -16,46 +20,72 @@ export const AboutPage: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto pb-12">
+    <div className="space-y-8 max-w-4xl mx-auto pb-16">
       {/* Header Banner */}
-      <div className="bg-emerald-950 text-white rounded-3xl p-6 sm:p-10 shadow-sm text-center sm:text-left">
+      <div className="bg-[#183D29] text-[#FAF7F0] rounded-3xl p-6 sm:p-10 shadow-sm text-center sm:text-left">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-900 rounded-full text-xs font-semibold text-emerald-300 border border-emerald-800">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#122e1f] rounded-full text-xs font-semibold text-emerald-300 border border-emerald-800">
             <Sprout className="w-3.5 h-3.5" />
-            Our Mission & Institutional Standards
+            <span>Mission & Technology Vision</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight font-serif">
             About AgriKnowledge Hub
           </h1>
-          <p className="text-xs sm:text-sm text-emerald-100 leading-relaxed max-w-2xl">
-            AgriKnowledge Hub was built with a singular vision: to bridge the digital agricultural information gap by uniting verified scientific research, practical farm management tools, transparent market prices, and expert advice onto one reliable platform.
+          <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-2xl">
+            <strong>Trusted Agricultural Knowledge. Stronger Farming. Better Markets.</strong><br />
+            AgriKnowledge Hub is an integrated agricultural technology, community, and commerce platform built to equip smallholder farmers, commercial growers, cooperatives, and agribusinesses in Kenya with verified agronomic science, practical farm calculators, and direct marketplace access.
           </p>
+        </div>
+      </div>
+
+      {/* Founder & Developer Section */}
+      <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 shadow-xs space-y-4">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#183D29]">
+          <Code className="w-4 h-4 text-emerald-700" />
+          <span>Founder & Developer Attribution</span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 pt-1">
+          <div className="w-20 h-20 rounded-2xl bg-[#183D29] text-[#FAF7F0] flex items-center justify-center font-bold text-2xl shadow-sm shrink-0">
+            AK
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-bold text-stone-900 leading-tight">
+              Adams Kipkoech Kering
+            </h2>
+            <div className="text-xs text-stone-600 font-medium">
+              Founder & Lead Software Engineer, AgriKnowledge Hub
+            </div>
+            <p className="text-xs text-stone-700 leading-relaxed pt-1">
+              Founded and architected by <strong>Adams Kipkoech Kering</strong> to solve critical bottlenecks in agricultural advisory, input sourcing, and post-harvest market linkage across Kenya. Conceived as a resilient digital platform grounded in Kenya's agro-ecological zones with an extensible architecture for regional and continental scale.
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Core Principles */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs space-y-2">
-          <ShieldCheck className="w-8 h-8 text-emerald-700" />
+          <ShieldCheck className="w-7 h-7 text-[#183D29]" />
           <h3 className="font-bold text-stone-900 text-sm">Rigorous Agronomic Quality</h3>
           <p className="text-xs text-stone-600 leading-relaxed">
-            All crop and livestock recommendations are synthesized from published Kenyan research institutions (KALRO, KEPHIS) rather than generic web scraping.
+            All crop and livestock recommendations are synthesized from published Kenyan research institutions (KALRO, KEPHIS) rather than generic unverified web scraping.
           </p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs space-y-2">
-          <Building className="w-8 h-8 text-emerald-700" />
+          <Building className="w-7 h-7 text-[#183D29]" />
           <h3 className="font-bold text-stone-900 text-sm">Targeted Localization</h3>
           <p className="text-xs text-stone-600 leading-relaxed">
-            Architected specifically for Kenya as the initial launchpad, including local bimodal seasons (Long & Short Rains), 47 counties, KES budgeting, and English & Kiswahili.
+            Architected specifically for Kenya as the launchpad: 47 counties, bimodal rainfall seasons (Long & Short Rains), KES pricing, and English & Kiswahili language support.
           </p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs space-y-2">
-          <Lock className="w-8 h-8 text-emerald-700" />
+          <Lock className="w-7 h-7 text-[#183D29]" />
           <h3 className="font-bold text-stone-900 text-sm">Farmer Privacy & Trust</h3>
           <p className="text-xs text-stone-600 leading-relaxed">
-            Designed in strict compliance with the Kenya Data Protection Act (DPA 2019). Private farm financial and yield records remain strictly confidential.
+            Designed with security-first principles in alignment with the Kenya Data Protection Act (DPA 2019). Farm yields, financial records, and personal details remain confidential.
           </p>
         </div>
       </div>
@@ -63,31 +93,31 @@ export const AboutPage: React.FC = () => {
       {/* Authoritative Institutional References */}
       <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 space-y-4 shadow-xs">
         <h3 className="text-base font-bold text-stone-900">
-          Primary Kenyan Agricultural Institutional Sources
+          Primary Kenyan Agricultural Institutional Benchmarks
         </h3>
         <div className="space-y-3 text-xs text-stone-700">
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
             <div>
               <strong>Kenya Agricultural & Livestock Research Organization (KALRO): </strong>
-              Cereal agronomy guidelines, disease pest thresholds, and livestock breeding manuals.
+              Cereal agronomy guidelines, pest economic injury thresholds, and livestock breeding manuals.
             </div>
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
             <div>
               <strong>Kenya Plant Health Inspectorate Service (KEPHIS): </strong>
-              Official National Crop Variety Release List, seed certification standards, and phytosanitary export requirements.
+              Official National Crop Variety Release List, seed certification standards, and phytosanitary guidelines.
             </div>
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
             <div>
               <strong>Kenya Meteorological Department (KMD): </strong>
-              County agro-meteorological advisories and seasonal rainfall onset forecasts.
+              County agro-meteorological advisories and bimodal seasonal rainfall onset forecasts.
             </div>
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
             <div>
               <strong>Pest Control Products Board (PCPB): </strong>
@@ -103,15 +133,15 @@ export const AboutPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-stone-700">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-emerald-700" />
-            <span>Nairobi & Regional County Desks, Kenya</span>
+            <span>Nairobi & Eldoret Desks, Kenya</span>
           </div>
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4 text-emerald-700" />
-            <span>support@agriknowledge.co.ke</span>
+            <span>contact@agriknowledge.co.ke</span>
           </div>
           <div className="flex items-center gap-2">
             <Phone className="w-4 h-4 text-emerald-700" />
-            <span>+254 700 000 000 / Toll Free 0800</span>
+            <span>+254 712 345 678</span>
           </div>
         </div>
       </div>

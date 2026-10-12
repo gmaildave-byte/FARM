@@ -16,7 +16,8 @@ import {
   MapPin,
   Calendar,
   CheckCircle2,
-  DollarSign
+  DollarSign,
+  ShoppingBag
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { cropsData } from '../data/crops';
@@ -40,18 +41,19 @@ export const HomePage: React.FC<HomePageProps> = ({
   const featuredCrops = cropsData.filter((c) => c.isFeatured).slice(0, 4);
 
   const categories = [
-    { id: 'crops', name: 'Crop Farming', swahili: 'Kilimo cha Mazao', icon: Sprout, count: '30+ Kenyan Crops', desc: 'Cereals, legumes, vegetables, fruits, cash crops, and fodder.' },
+    { id: 'marketplace', name: 'Agricultural Marketplace', swahili: 'Soko la Kilimo', icon: ShoppingBag, count: '12 Trade Categories', desc: 'Trade certified seeds, fertilizers, machinery, feeds, livestock, and fresh produce directly.' },
+    { id: 'community', name: 'Farmer Community', swahili: 'Jukwaa la Wakulima', icon: Users, count: 'Real Field Posts', desc: 'Connect with fellow Kenyan farmers, share harvest photos, and swap advice.' },
+    { id: 'crops', name: 'Crop Farming Guides', swahili: 'Kilimo cha Mazao', icon: Sprout, count: '30+ Kenyan Crops', desc: 'Cereals, legumes, vegetables, fruits, cash crops, and fodder.' },
     { id: 'livestock', name: 'Livestock Farming', swahili: 'Ufugaji wa Mifugo', icon: Layers, count: '10+ Farmed Species', desc: 'Dairy, beef, poultry, dairy goats, sheep, aquaculture, and bees.' },
+    { id: 'calculators', name: '26 Farming Calculators', swahili: 'Vikokotoo vya Kilimo', icon: Calculator, count: 'Complete Precision Suite', desc: 'Seed rate, fertilizer bags, drip irrigation, break-even, and feed intake.' },
     { id: 'soil-water', name: 'Soil & Irrigation', swahili: 'Udongo na Maji', icon: Droplet, count: 'Testing & Fertility', desc: 'Soil testing labs, pH liming, NPK precision, and drip irrigation.' },
-    { id: 'pests', name: 'Pests & Diseases', swahili: 'Wadudu na Magonjwa', icon: Bug, count: 'IPM Diagnostic Bank', desc: 'Symptom identifier, prevention, biological controls, and safe chemical rules.' },
+    { id: 'pests', name: 'Pests & Diseases', swahili: 'Wadudu na Magonjwa', icon: Bug, count: 'IPM Diagnostic Bank', desc: 'Symptom identifier, prevention, biological controls, and chemical safety.' },
     { id: 'weather', name: 'Weather & Climate', swahili: 'Hali ya Hewa', icon: Sun, count: 'County Calendars', desc: 'Agro-weather forecasts, seasonal outlooks, and planting timetables.' },
-    { id: 'calculators', name: '26 Farming Calculators', swahili: 'Vikokotoo vya Kilimo', icon: Calculator, count: 'Complete Suite', desc: 'Seed rate, fertilizer bags, irrigation water, break-even, and feed intake.' },
-    { id: 'markets', name: 'Markets & Prices', swahili: 'Soko na Bei za Mazao', icon: TrendingUp, count: 'Wholesale & Retail', desc: 'Live price benchmarks across Nairobi, Eldoret, Nakuru, Kisumu, Mombasa.' },
+    { id: 'markets', name: 'Market Price Tracker', swahili: 'Soko na Bei za Mazao', icon: TrendingUp, count: 'Wholesale & Retail', desc: 'Live price benchmarks across Nairobi, Eldoret, Nakuru, Kisumu, Mombasa.' },
     { id: 'farm-manager', name: 'Farm Manager', swahili: 'Usimamizi wa Shamba', icon: Calendar, count: 'Personal Farm Portal', desc: 'Track fields, seasonal activities, harvest logs, and KES financials.' },
     { id: 'suppliers', name: 'Supplies & Machinery', swahili: 'Vifaa na Pembejeo', icon: ShieldCheck, count: 'Certified Agribusiness', desc: 'Certified seed producers, fertilizer dealers, and solar pumps.' },
     { id: 'learning', name: 'Learning Centre', swahili: 'Chuo cha Kilimo', icon: BookOpen, count: 'Certified Courses', desc: 'Interactive lessons, field checklists, quizzes, and certificates.' },
-    { id: 'ai-assistant', name: 'AI Farming Assistant', swahili: 'Msaidizi wa AI', icon: Sparkles, count: '24/7 Agronomist', desc: 'Server-side agronomic Q&A grounded in official KALRO production manuals.' },
-    { id: 'community', name: 'Farmer Community', swahili: 'Jukwaa la Wakulima', icon: Users, count: 'Discussions & Advice', desc: 'Connect with fellow Kenyan farmers, share yields, and ask questions.' },
+    { id: 'ai-assistant', name: 'AI Farming Assistant', swahili: 'Msaidizi wa AI', icon: Sparkles, count: '24/7 Agronomist', desc: 'Server-side agronomic advisory grounded in KALRO research manuals.' },
   ];
 
   return (
@@ -72,7 +74,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           {/* Tagline Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-800/80 border border-emerald-600/50 text-xs sm:text-sm font-medium text-emerald-200 mb-6 backdrop-blur-xs">
             <Sprout className="w-4 h-4 text-emerald-400" />
-            <span>Kenya's Comprehensive Agricultural Knowledge & Farm Management Hub</span>
+            <span>Trusted Agricultural Knowledge • Stronger Farming • Better Markets</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-3xl leading-tight sm:leading-none mb-6">
@@ -83,7 +85,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </h1>
 
           <p className="text-base sm:text-xl text-stone-200 max-w-2xl leading-relaxed mb-8">
-            Learn, plan, manage, and grow with authoritative Kenyan agricultural guides, 26 functional farming calculators, verified wholesale prices, expert advisory, and a complete farm manager.
+            An integrated agricultural technology platform founded by <strong>Adams Kipkoech Kering</strong>. Learn, plan, calculate, manage, and trade with verified Kenyan agronomic guides, 26 functional farming calculators, wholesale price benchmarks, and a direct marketplace.
           </p>
 
           {/* Prominent Search Bar */}

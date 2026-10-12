@@ -4,7 +4,9 @@ export const translations = {
   en: {
     // Brand
     brandName: 'AgriKnowledge Hub',
-    tagline: 'Knowledge for Better Farming. Technology for a Better Harvest.',
+    tagline: 'Trusted Agricultural Knowledge. Stronger Farming. Better Markets.',
+    founder: 'Adams Kipkoech Kering',
+    founderAttribution: 'Founded and developed by Adams Kipkoech Kering',
     countryTarget: 'Kenya',
     currency: 'KES',
 
@@ -18,7 +20,7 @@ export const translations = {
       weather: 'Weather & Climate',
       farmManager: 'Farm Manager',
       calculators: 'Calculators & Tools',
-      markets: 'Markets & Prices',
+      markets: 'Agricultural Marketplace',
       suppliers: 'Equipment & Supplies',
       sustainable: 'Sustainable Farming',
       learning: 'Learning Centre',
@@ -27,8 +29,8 @@ export const translations = {
       community: 'Farmer Community',
       opportunities: 'Jobs & Grants',
       farmBusiness: 'Farm Business',
-      adminCms: 'CMS & Admin',
-      about: 'About Us',
+      adminCms: 'Admin & Moderation',
+      about: 'About AgriKnowledge Hub',
       searchPlaceholder: 'Search crops, animals, pests, tools, prices...',
       signIn: 'Sign In',
       signOut: 'Sign Out',
@@ -88,7 +90,9 @@ export const translations = {
   sw: {
     // Brand
     brandName: 'AgriKnowledge Hub',
-    tagline: 'Ujuzi wa Kilimo Bora. Teknolojia kwa Mavuno Mengi.',
+    tagline: 'Ujuzi wa Kilimo wa Kuaminika. Kilimo Imara. Masoko Bora.',
+    founder: 'Adams Kipkoech Kering',
+    founderAttribution: 'Iliyoanzishwa na kuendelezwa na Adams Kipkoech Kering',
     countryTarget: 'Kenya',
     currency: 'KES',
 
@@ -102,7 +106,7 @@ export const translations = {
       weather: 'Hali ya Hewa',
       farmManager: 'Usimamizi wa Shamba',
       calculators: 'Vikokotoo na Zana',
-      markets: 'Soko na Bei',
+      markets: 'Soko la Kilimo',
       suppliers: 'Vifaa na Pembejeo',
       sustainable: 'Kilimo Endelevu',
       learning: 'Chuo cha Kilimo',
@@ -111,8 +115,8 @@ export const translations = {
       community: 'Jukwaa la Wakulima',
       opportunities: 'Kazi na Ruzuku',
       farmBusiness: 'Biashara ya Kilimo',
-      adminCms: 'Usimamizi wa Tovuti',
-      about: 'Kuhusu Sisi',
+      adminCms: 'Usimamizi wa Mfumo',
+      about: 'Kuhusu AgriKnowledge Hub',
       searchPlaceholder: 'Tafuta mazao, wanyama, magonjwa, vikokotoo...',
       signIn: 'Ingia',
       signOut: 'Ondoka',
