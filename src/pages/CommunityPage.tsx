@@ -24,6 +24,8 @@ import { forumPostsData } from '../data/forum';
 import { ForumPost, ReportItem } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { kenyanCounties } from '../components/Navbar';
+import { ShareSheetModal } from '../components/ShareSheetModal';
+import { ReportModal } from '../components/ReportModal';
 
 interface CommunityPageProps {
   isMobileFrame?: boolean;
@@ -62,6 +64,21 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
     'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=1000&q=80'
   );
   const [postLocation, setPostLocation] = useState('Nakuru Highlands');
+  const [activeSharePost, setActiveSharePost] = useState<ForumPost | null>(null);
+  const [uploadedImagePreview, setUploadedImagePreview] = useState<string | null>(null);
+
+  const handleCustomImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setUploadedImagePreview(result);
+        setPostImage(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Report Modal
   const [reportingPost, setReportingPost] = useState<ForumPost | null>(null);
@@ -548,6 +565,18 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
                     </span>
                   </button>
 
+                  {/* Share Button */}
+                  <button
+                    onClick={() => setActiveSharePost(post)}
+                    className="flex items-center gap-1.5 group transition active:scale-95 text-stone-700 hover:text-stone-950"
+                    aria-label="Share post"
+                  >
+                    <Share2 className="w-5 h-5 stroke-[1.8] text-stone-700 group-hover:text-[#183D29]" />
+                    <span className="text-[13.5px] font-medium text-stone-700">
+                      Share
+                    </span>
+                  </button>
+
                   {/* Bookmark Button */}
                   <button
                     onClick={() => handleToggleBookmark(post.id)}
@@ -795,37 +824,73 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  Agricultural Photo (Preset or image URL)
+                  Upload Farm Photo or Choose Sample
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    {
-                      label: 'Fresh Tomatoes 🍅',
-                      url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=1000&q=80',
-                    },
-                    {
-                      label: 'Runner Beans 🌱',
-                      url: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1000&q=80',
-                    },
-                    {
-                      label: 'Golden Maize 🌽',
-                      url: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=1000&q=80',
-                    },
-                  ].map((preset) => (
+                
+                {/* File Upload Selector */}
+                <div className="mb-2">
+                  <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-stone-300 hover:border-emerald-600 rounded-2xl bg-white cursor-pointer transition text-xs font-semibold text-stone-700">
+                    <Camera className="w-4 h-4 text-emerald-800" />
+                    <span>Upload photo from your device / camera</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCustomImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Uploaded Preview or Presets */}
+                {uploadedImagePreview ? (
+                  <div className="relative rounded-2xl overflow-hidden h-36 bg-stone-100 border border-stone-200">
+                    <img
+                      src={uploadedImagePreview}
+                      alt="Uploaded preview"
+                      className="w-full h-full object-cover"
+                    />
                     <button
                       type="button"
-                      key={preset.label}
-                      onClick={() => setPostImage(preset.url)}
-                      className={`text-[11px] p-2 rounded-xl border text-center font-medium transition ${
-                        postImage === preset.url
-                          ? 'border-[#183D29] bg-[#183D29]/10 text-[#183D29] font-bold'
-                          : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
-                      }`}
+                      onClick={() => {
+                        setUploadedImagePreview(null);
+                        setPostImage('');
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-stone-900/70 text-white text-xs"
                     >
-                      {preset.label}
+                      <X className="w-3.5 h-3.5" />
                     </button>
-                  ))}
-                </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      {
+                        label: 'Fresh Tomatoes 🍅',
+                        url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=1000&q=80',
+                      },
+                      {
+                        label: 'Runner Beans 🌱',
+                        url: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1000&q=80',
+                      },
+                      {
+                        label: 'Golden Maize 🌽',
+                        url: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=1000&q=80',
+                      },
+                    ].map((preset) => (
+                      <button
+                        type="button"
+                        key={preset.label}
+                        onClick={() => setPostImage(preset.url)}
+                        className={`text-[11px] p-2 rounded-xl border text-center font-medium transition ${
+                          postImage === preset.url
+                            ? 'border-[#183D29] bg-[#183D29]/10 text-[#183D29] font-bold'
+                            : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2">
@@ -838,15 +903,43 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#183D29] text-[#FAF7F0] rounded-xl text-xs font-bold hover:bg-[#122e1f] transition shadow-xs"
+                  className="px-5 py-2.5 bg-[#183D29] text-[#FAF7F0] rounded-xl text-xs font-bold hover:bg-[#122e1f] transition shadow-xs flex items-center gap-1.5"
                 >
-                  Post to Community
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Publish Field Update</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Share Sheet Modal */}
+      {activeSharePost && (
+        <ShareSheetModal
+          isOpen={Boolean(activeSharePost)}
+          onClose={() => setActiveSharePost(null)}
+          post={{
+            id: activeSharePost.id,
+            title: activeSharePost.title,
+            authorName: activeSharePost.authorName,
+            content: activeSharePost.content,
+            county: activeSharePost.county,
+          }}
+        />
+      )}
+
+      {/* Report Modal */}
+      {reportingPost && (
+        <ReportModal
+          isOpen={Boolean(reportingPost)}
+          onClose={() => setReportingPost(null)}
+          targetType="post"
+          targetId={reportingPost.id}
+          targetTitle={reportingPost.content.slice(0, 60)}
+        />
+      )}
     </div>
   );
 };
+

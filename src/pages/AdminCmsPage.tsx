@@ -25,10 +25,11 @@ import { useAuth } from '../context/AuthContext';
 import { cropsData } from '../data/crops';
 import { livestockData } from '../data/livestock';
 import { ReportItem } from '../types';
+import { FounderRevenueDashboard } from '../components/FounderRevenueDashboard';
 
 export const AdminCmsPage: React.FC = () => {
   const { user, role } = useAuth();
-  const [activeTab, setActiveTab] = useState<'reports' | 'articles' | 'users' | 'metrics'>('reports');
+  const [activeTab, setActiveTab] = useState<'revenue' | 'reports' | 'articles' | 'users' | 'metrics'>('revenue');
 
   // Moderation Reports Queue
   const [reports, setReports] = useState<ReportItem[]>(() => {
@@ -178,10 +179,20 @@ export const AdminCmsPage: React.FC = () => {
       </div>
 
       {/* Admin Nav Tabs */}
-      <div className="flex border-b border-stone-200 bg-white rounded-2xl p-1.5 shadow-xs text-xs font-semibold">
+      <div className="flex border-b border-stone-200 bg-white rounded-2xl p-1.5 shadow-xs text-xs font-semibold overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveTab('revenue')}
+          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 whitespace-nowrap ${
+            activeTab === 'revenue' ? 'bg-[#183D29] text-white' : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4 text-amber-400" />
+          <span>Founder Revenue & Ledger</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('reports')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 whitespace-nowrap ${
             activeTab === 'reports' ? 'bg-[#183D29] text-white' : 'text-stone-600 hover:text-stone-900'
           }`}
         >
@@ -191,17 +202,17 @@ export const AdminCmsPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('articles')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 whitespace-nowrap ${
             activeTab === 'articles' ? 'bg-[#183D29] text-white' : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Articles & Editorial ({articles.length})</span>
+          <span>Articles ({articles.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('users')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 whitespace-nowrap ${
             activeTab === 'users' ? 'bg-[#183D29] text-white' : 'text-stone-600 hover:text-stone-900'
           }`}
         >
@@ -211,14 +222,17 @@ export const AdminCmsPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('metrics')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 whitespace-nowrap ${
             activeTab === 'metrics' ? 'bg-[#183D29] text-white' : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           <Activity className="w-4 h-4" />
-          <span>System Health & Audit</span>
+          <span>System Health</span>
         </button>
       </div>
+
+      {/* Tab 0: Founder Revenue Dashboard */}
+      {activeTab === 'revenue' && <FounderRevenueDashboard />}
 
       {/* Tab 1: Moderation Queue */}
       {activeTab === 'reports' && (

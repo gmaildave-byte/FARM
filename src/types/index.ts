@@ -26,7 +26,9 @@ export type Page =
   | 'farm-business'
   | 'admin-cms'
   | 'about'
-  | 'events';
+  | 'events'
+  | 'discover'
+  | 'legal';
 
 export type UserRole =
   | 'guest'
@@ -56,6 +58,10 @@ export interface UserProfile {
   followersCount?: number;
   followingCount?: number;
   verifiedBadge?: boolean;
+  verificationTier?: 'none' | 'farmer_verified' | 'business_verified' | 'professional_verified';
+  verificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  subscriptionPlan?: 'free' | 'business' | 'professional';
+  isFounder?: boolean;
   publicLinks?: {
     website?: string;
     github?: string;
@@ -158,6 +164,8 @@ export interface MarketplaceListing {
   paymentTerms?: string;
   deliveryFeeKES?: number;
   verifiedSeller?: boolean;
+  isFeatured?: boolean;
+  featuredUntil?: string;
   status: 'active' | 'sold' | 'booked' | 'paused';
   createdAt: string;
   enquiriesCount?: number;
@@ -620,4 +628,64 @@ export interface FarmHarvestRecord {
   grade: string;
   storedOrSold: 'Stored' | 'Sold' | 'Consumed';
   revenueRealizedKES?: number;
+}
+
+// Verification Application Data Model
+export interface VerificationApplication {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userPhone: string;
+  tier: 'farmer_verified' | 'business_verified' | 'professional_verified';
+  businessOrFarmName: string;
+  idOrRegNumber: string;
+  county: string;
+  documentNames: string[];
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  reviewedAt?: string;
+  adminNotes?: string;
+  feePaidKES: number;
+  mpesaRef?: string;
+}
+
+// Payment & Financial Transactions
+export interface PaymentTransaction {
+  id: string;
+  transactionRef: string;
+  mpesaReceipt?: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  purpose: 'featured_listing' | 'subscription' | 'verification_fee' | 'ad_banner';
+  targetId?: string; // listing id or plan name
+  targetTitle?: string;
+  amountKES: number;
+  paymentMethod: 'mpesa' | 'card';
+  status: 'completed' | 'pending' | 'failed' | 'refunded';
+  createdAt: string;
+  notes?: string;
+}
+
+export interface FeaturedPromotion {
+  id: string;
+  listingId: string;
+  sellerId: string;
+  days: 7 | 14 | 30;
+  startDate: string;
+  endDate: string;
+  amountKES: number;
+  transactionRef: string;
+  active: boolean;
+}
+
+export interface PricingConfig {
+  featured7DaysKES: number;
+  featured14DaysKES: number;
+  featured30DaysKES: number;
+  businessMonthlyKES: number;
+  businessAnnualKES: number;
+  professionalMonthlyKES: number;
+  verificationFeeKES: number;
 }

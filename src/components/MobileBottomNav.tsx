@@ -1,15 +1,23 @@
 import React from 'react';
-import { Home, Users, ShoppingBag, Calculator, User } from 'lucide-react';
+import {
+  Home,
+  Compass,
+  Plus,
+  ShoppingBag,
+  User
+} from 'lucide-react';
 import { Page } from '../types';
 
 interface MobileBottomNavProps {
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
+  onCreateClick: () => void;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentPage,
   setCurrentPage,
+  onCreateClick,
 }) => {
   const tabs = [
     {
@@ -18,19 +26,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       icon: Home,
     },
     {
-      id: 'community' as Page,
-      label: 'Community',
-      icon: Users,
+      id: 'discover' as Page,
+      label: 'Discover',
+      icon: Compass,
+    },
+    {
+      id: 'create' as const,
+      label: 'Create',
+      isAction: true,
+      icon: Plus,
     },
     {
       id: 'marketplace' as Page,
       label: 'Marketplace',
       icon: ShoppingBag,
-    },
-    {
-      id: 'calculators' as Page,
-      label: 'Tools',
-      icon: Calculator,
     },
     {
       id: 'profile' as Page,
@@ -40,21 +49,41 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   ];
 
   return (
-    <nav className="fixed md:hidden bottom-0 left-0 right-0 z-40 bg-[#FAF7F0] border-t border-stone-200/80 px-2 pt-1.5 pb-4 select-none shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+    <nav className="fixed md:hidden bottom-0 left-0 right-0 z-40 bg-[#FAF7F0] border-t border-stone-200/90 px-3 pt-1.5 pb-4 select-none shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
       <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map((tab) => {
+          if (tab.isAction) {
+            return (
+              <button
+                key="create-action"
+                onClick={onCreateClick}
+                className="flex flex-col items-center justify-center relative -mt-5 transition active:scale-95 focus:outline-none"
+                aria-label="Create Post or Listing"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#183D29] hover:bg-[#122e1f] text-[#FAF7F0] shadow-lg flex items-center justify-center border-4 border-[#FAF7F0] transition-transform">
+                  <Plus className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <span className="text-[10px] mt-0.5 tracking-tight font-bold text-[#183D29]">
+                  Create
+                </span>
+              </button>
+            );
+          }
+
           const isActive =
             currentPage === tab.id ||
             (tab.id === 'home' &&
-              !['community', 'marketplace', 'calculators', 'profile'].includes(currentPage));
+              !['discover', 'marketplace', 'profile', 'community'].includes(currentPage)) ||
+            (tab.id === 'discover' &&
+              ['crops', 'livestock', 'soil-water', 'pests', 'weather', 'calculators', 'learning', 'suppliers', 'ai-assistant', 'markets'].includes(currentPage));
 
           const IconComponent = tab.icon;
 
           return (
             <button
               key={tab.id}
-              onClick={() => setCurrentPage(tab.id)}
-              className="flex flex-col items-center justify-center relative py-1 px-2 min-w-[56px] transition active:scale-95"
+              onClick={() => setCurrentPage(tab.id as Page)}
+              className="flex flex-col items-center justify-center relative py-1 px-2 min-w-[56px] transition active:scale-95 focus:outline-none"
             >
               <div className="relative flex flex-col items-center">
                 <IconComponent
@@ -63,7 +92,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   }`}
                 />
 
-                {/* Green Indicator Underline */}
+                {/* Dark Green Active Indicator Underline */}
                 {isActive && (
                   <span className="w-4 h-[2px] bg-[#183D29] rounded-full mt-0.5 animate-in fade-in" />
                 )}

@@ -17,11 +17,13 @@ import {
   MessageSquare,
   HelpCircle,
   Bell,
-  CheckCircle2
+  CheckCircle2,
+  Download
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { Page, UserRole } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
   currentPage: Page;
@@ -105,16 +107,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white shadow-xs border-b border-stone-200">
       {/* Top Utility Ribbon */}
-      <div className="bg-[#183D29] text-[#FAF7F0] text-xs py-1 px-4 sm:px-8 border-b border-emerald-950">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div className="bg-[#183D29] text-[#FAF7F0] text-xs py-1 px-3 sm:px-8 border-b border-emerald-950 w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Location & Currency Selector */}
-          <div className="flex items-center gap-2">
-            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-emerald-200 hidden sm:inline">Region:</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="text-emerald-200 hidden sm:inline shrink-0">Region:</span>
             <select
               value={selectedCounty}
               onChange={(e) => setSelectedCounty(e.target.value)}
-              className="bg-[#112d1e] text-[#FAF7F0] border border-emerald-900 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              className="bg-[#112d1e] text-[#FAF7F0] border border-emerald-900 rounded px-1.5 py-0.5 text-[11px] sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400 max-w-[125px] sm:max-w-none truncate"
             >
               {kenyanCounties.map((c) => (
                 <option key={c} value={c} className="bg-[#183D29] text-white">
@@ -123,11 +125,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               ))}
             </select>
             <span className="text-emerald-700 hidden md:inline">|</span>
-            <span className="text-emerald-200 hidden md:inline">Currency: KES (Kenyan Shilling)</span>
+            <span className="text-emerald-200 hidden md:inline">Currency: KES</span>
           </div>
 
           {/* Right Utility Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Language Switcher */}
             <div className="flex items-center gap-1 bg-[#112d1e] rounded px-2 py-0.5 border border-emerald-900">
               <Globe className="w-3 h-3 text-emerald-400" />
@@ -185,21 +187,21 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 w-full">
         {/* Brand Logo & Tagline */}
         <div
           onClick={() => setCurrentPage('home')}
-          className="flex items-center gap-3 cursor-pointer select-none group"
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group min-w-0"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#183D29] flex items-center justify-center text-white shadow-sm group-hover:bg-[#122e1f] transition">
-            <Sprout className="w-6 h-6 text-emerald-300" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#183D29] flex items-center justify-center text-white shadow-sm group-hover:bg-[#122e1f] transition shrink-0">
+            <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-300" />
           </div>
-          <div>
-            <div className="text-lg sm:text-xl font-bold text-stone-900 tracking-tight leading-none flex items-center gap-1.5 font-serif">
+          <div className="min-w-0">
+            <div className="text-base sm:text-xl font-bold text-stone-900 tracking-tight leading-none flex items-center gap-1 font-serif">
               <span>AgriKnowledge</span>
               <span className="text-emerald-700">Hub</span>
             </div>
-            <div className="text-[11px] text-stone-500 font-medium hidden sm:block mt-0.5">
+            <div className="text-[11px] text-stone-500 font-medium hidden sm:block mt-0.5 truncate">
               Trusted Agricultural Knowledge • Stronger Farming • Better Markets
             </div>
           </div>
@@ -285,6 +287,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline">{user?.name?.split(' ')[0] || 'Profile'}</span>
           </button>
 
+          {/* PWA Install App Button */}
+          <div className="hidden sm:block">
+            <PWAInstallButton variant="nav" />
+          </div>
+
           {/* Farm Manager Dashboard Shortcut */}
           <button
             onClick={() => setCurrentPage('farm-manager')}
@@ -337,7 +344,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-stone-200 px-4 py-4 space-y-1 max-h-[80vh] overflow-y-auto">
+        <div className="lg:hidden bg-white border-t border-stone-200 px-4 py-4 space-y-3 max-h-[80vh] overflow-y-auto">
+          {/* PWA Install Button in Drawer */}
+          <div className="pb-1">
+            <PWAInstallButton
+              variant="drawer"
+              onInstalledOrDismissed={() => setMobileMenuOpen(false)}
+            />
+          </div>
+
           <div className="text-xs font-bold uppercase tracking-wider text-stone-500 px-3 py-1">
             Complete Farming Hub
           </div>

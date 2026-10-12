@@ -26,6 +26,9 @@ import {
 import { initialMarketplaceListings } from '../data/marketplaceListings';
 import { forumPostsData } from '../data/forum';
 import { kenyanCounties } from '../components/Navbar';
+import { VerificationModal } from '../components/VerificationModal';
+import { SubscriptionModal } from '../components/SubscriptionModal';
+import { Sparkles, Zap } from 'lucide-react';
 
 interface ProfilePageProps {
   isMobileFrame?: boolean;
@@ -41,6 +44,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(user?.followersCount || 342);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
   // Edit Form State
   const [editName, setEditName] = useState(user?.name || 'Adams Kipkoech Kering');
@@ -257,6 +262,67 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 ))}
               </div>
             )}
+
+            {/* Verification & Seller Subscription Status Bar */}
+            <div className="pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* Verification Tier Card */}
+              <div className="bg-emerald-50/70 border border-emerald-200/90 rounded-2xl p-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-800 text-white flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-stone-900">
+                      {user?.verifiedBadge ? 'Level 3: Verified Account' : 'Level 2: Registered Farmer'}
+                    </div>
+                    <div className="text-[11px] text-stone-500">
+                      {user?.verifiedBadge ? 'Identity & credentials verified' : 'Standard participation active'}
+                    </div>
+                  </div>
+                </div>
+                {!user?.verifiedBadge ? (
+                  <button
+                    onClick={() => setVerificationModalOpen(true)}
+                    className="px-3 py-1.5 bg-[#183D29] text-white rounded-xl font-bold text-[11px] hover:bg-[#122e1f] transition shrink-0"
+                  >
+                    Get Verified
+                  </button>
+                ) : (
+                  <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    Verified
+                  </span>
+                )}
+              </div>
+
+              {/* Seller Subscription Plan Card */}
+              <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-black shrink-0">
+                    <Zap className="w-4 h-4 fill-current" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-stone-900">
+                      {user?.subscriptionPlan === 'business'
+                        ? 'Business Seller Plan'
+                        : user?.subscriptionPlan === 'professional'
+                        ? 'Professional Suite'
+                        : 'Free Farmer Tier'}
+                    </div>
+                    <div className="text-[11px] text-stone-500">
+                      {user?.subscriptionPlan === 'business'
+                        ? '25 listings + Priority verified badge'
+                        : '3 active marketplace listings'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSubscriptionModalOpen(true)}
+                  className="px-3 py-1.5 bg-stone-900 text-white rounded-xl font-bold text-[11px] hover:bg-stone-800 transition shrink-0"
+                >
+                  Upgrade Plan
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -535,6 +601,39 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Verification Modal */}
+      {verificationModalOpen && (
+        <VerificationModal
+          isOpen={verificationModalOpen}
+          onClose={() => setVerificationModalOpen(false)}
+          currentUser={{
+            id: user?.id || 'user-current',
+            name: user?.name || 'Adams Kipkoech Kering',
+            email: user?.email || 'adams@agriknowledge.co.ke',
+            county: user?.county || 'Uasin Gishu',
+          }}
+          onApplicationSubmitted={(app) => {
+            updateProfile({ verifiedBadge: true });
+            showToast('Verification application submitted! We will review within 24-48 hours.');
+            setVerificationModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* Subscription Modal */}
+      {subscriptionModalOpen && (
+        <SubscriptionModal
+          isOpen={subscriptionModalOpen}
+          onClose={() => setSubscriptionModalOpen(false)}
+          currentPlan="free"
+          onPlanUpgraded={(plan) => {
+            updateProfile({ subscriptionPlan: plan, verifiedBadge: true });
+            showToast(`Upgraded to ${plan.toUpperCase()} plan!`);
+            setSubscriptionModalOpen(false);
+          }}
+        />
       )}
     </div>
   );

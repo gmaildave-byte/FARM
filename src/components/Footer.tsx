@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sprout, Mail, ShieldAlert, CheckCircle2, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Page } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface FooterProps {
   setCurrentPage: (page: Page) => void;
@@ -21,10 +22,10 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
   };
 
   return (
-    <footer className="bg-stone-900 text-stone-300 border-t border-stone-800 mt-20">
+    <footer className="bg-stone-900 text-stone-300 border-t border-stone-800 mt-12 sm:mt-20 w-full overflow-x-hidden">
       {/* Top Banner: Authoritative Agricultural References */}
-      <div className="border-b border-stone-800 bg-stone-950 py-4 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3 text-xs text-stone-400">
+      <div className="border-b border-stone-800 bg-stone-950 py-3 sm:py-4 px-3.5 sm:px-8">
+        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-stone-400">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-stone-200">Grounded in Authoritative Kenyan Agricultural Guidance:</span>
             <span>KALRO • KEPHIS • MoALD • Kenya Meteorological Department (KMD) • ICIPE • CIMMYT</span>
@@ -36,7 +37,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
       </div>
 
       {/* Main Footer Links */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-8 py-10 sm:py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
         {/* Brand & Mission (Col 1 & 2) */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center gap-2.5">
@@ -81,6 +82,11 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
                 </button>
               </form>
             )}
+          </div>
+
+          {/* PWA App Install Button */}
+          <div className="pt-2">
+            <PWAInstallButton variant="footer" />
           </div>
         </div>
 
@@ -207,8 +213,8 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
       </div>
 
       {/* Mandatory Agricultural & Veterinary Legal Disclaimer */}
-      <div className="bg-stone-950/90 border-t border-stone-800 py-6 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex items-start gap-3 text-xs text-stone-400 leading-relaxed">
+      <div className="bg-stone-950/90 border-t border-stone-800 py-5 sm:py-6 px-3.5 sm:px-8">
+        <div className="max-w-7xl mx-auto flex items-start gap-2.5 sm:gap-3 text-xs text-stone-400 leading-relaxed">
           <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <div>
             <span className="font-semibold text-stone-300">Agricultural & Veterinary Advisory Disclaimer: </span>
@@ -218,21 +224,21 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
       </div>
 
       {/* Copyright Bar */}
-      <div className="border-t border-stone-800 py-4 px-4 sm:px-8 text-center text-xs text-stone-400">
+      <div className="border-t border-stone-800 py-4 px-3.5 sm:px-8 text-center text-xs text-stone-400">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-          <div>
+          <div className="text-[11px] sm:text-xs">
             © {new Date().getFullYear()} AgriKnowledge Hub (Kenya) • Founded & Developed by Adams Kipkoech Kering.
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 text-[11px] sm:text-xs">
             <button onClick={() => setCurrentPage('about')} className="hover:text-stone-300">
               Editorial Policy
             </button>
             <span>•</span>
-            <button onClick={() => setCurrentPage('about')} className="hover:text-stone-300">
+            <button onClick={() => setCurrentPage('legal')} className="hover:text-stone-300">
               Data Protection (Kenya DPA 2019)
             </button>
             <span>•</span>
-            <button onClick={() => setCurrentPage('about')} className="hover:text-stone-300">
+            <button onClick={() => setCurrentPage('legal')} className="hover:text-stone-300">
               Terms of Use
             </button>
           </div>

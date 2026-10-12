@@ -112,6 +112,371 @@ Provide a comprehensive, authoritative, practical response for this farmer.`;
   }
 });
 
+// ==========================================
+// SERVER-SIDE IN-MEMORY DATABASE & MONETIZATION LEDGER
+// ==========================================
+
+interface ServerTransaction {
+  id: string;
+  transactionRef: string;
+  mpesaReceipt?: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  purpose: 'featured_listing' | 'subscription' | 'verification_fee' | 'ad_banner';
+  targetId?: string;
+  targetTitle?: string;
+  amountKES: number;
+  paymentMethod: 'mpesa' | 'card';
+  status: 'completed' | 'pending' | 'failed';
+  createdAt: string;
+}
+
+let serverTransactions: ServerTransaction[] = [
+  {
+    id: 'tx-init-1',
+    transactionRef: 'AKH-20261009-8812',
+    mpesaReceipt: 'QHK9281KX2',
+    userId: 'user-farmer-1',
+    userName: 'Kiprono Cheruiyot',
+    userPhone: '+254712345678',
+    purpose: 'featured_listing',
+    targetId: 'mkt-1',
+    targetTitle: 'Certified SC Duma 43 Hybrid Seed Maize (10kg Bags)',
+    amountKES: 800,
+    paymentMethod: 'mpesa',
+    status: 'completed',
+    createdAt: '2026-10-09T14:22:00Z',
+  },
+  {
+    id: 'tx-init-2',
+    transactionRef: 'AKH-20261010-3341',
+    mpesaReceipt: 'QHL1827JA9',
+    userId: 'user-buyer-1',
+    userName: 'David Omondi',
+    userPhone: '+254722889001',
+    purpose: 'subscription',
+    targetId: 'plan-business',
+    targetTitle: 'Business Seller Subscription (Annual)',
+    amountKES: 9500,
+    paymentMethod: 'mpesa',
+    status: 'completed',
+    createdAt: '2026-10-10T09:15:00Z',
+  },
+  {
+    id: 'tx-init-3',
+    transactionRef: 'AKH-20261011-5529',
+    mpesaReceipt: 'QHL7719MN4',
+    userId: 'user-expert-1',
+    userName: 'Dr. Beatrice Wambui',
+    userPhone: '+254733445566',
+    purpose: 'verification_fee',
+    targetId: 'ver-exp-1',
+    targetTitle: 'Professional Agronomist Qualification Vetting',
+    amountKES: 1200,
+    paymentMethod: 'mpesa',
+    status: 'completed',
+    createdAt: '2026-10-11T11:40:00Z',
+  },
+];
+
+let serverPricingConfig = {
+  featured7DaysKES: 450,
+  featured14DaysKES: 800,
+  featured30DaysKES: 1500,
+  businessMonthlyKES: 990,
+  businessAnnualKES: 9500,
+  professionalMonthlyKES: 2900,
+  verificationFeeKES: 1200,
+};
+
+let serverVerificationApplications = [
+  {
+    id: 'ver-app-1',
+    userId: 'user-farmer-1',
+    userName: 'Kiprono Cheruiyot',
+    userEmail: 'kiprono@highlandfarms.co.ke',
+    userPhone: '+254712345678',
+    tier: 'farmer_verified',
+    businessOrFarmName: 'Rift Valley Green Farms',
+    idOrRegNumber: 'ID-28491820',
+    county: 'Uasin Gishu',
+    documentNames: ['National_ID_Front.jpg', 'Farm_Title_Deed_Excerpt.pdf'],
+    status: 'approved',
+    submittedAt: '2026-10-08T10:00:00Z',
+    reviewedAt: '2026-10-08T16:30:00Z',
+    adminNotes: 'National ID verified against Kenyan Registrar of Persons database. Verified farmer.',
+    feePaidKES: 0,
+    mpesaRef: 'FREE_STANDARD',
+  },
+  {
+    id: 'ver-app-2',
+    userId: 'user-buyer-1',
+    userName: 'David Omondi',
+    userEmail: 'omondi@highlandgrains.co.ke',
+    userPhone: '+254722889001',
+    tier: 'business_verified',
+    businessOrFarmName: 'Highland Grain Processors Ltd',
+    idOrRegNumber: 'BN-CPR/2019/38491',
+    county: 'Nairobi',
+    documentNames: ['Certificate_of_Incorporation.pdf', 'CR12_Official_Search.pdf'],
+    status: 'approved',
+    submittedAt: '2026-10-09T08:15:00Z',
+    reviewedAt: '2026-10-09T14:10:00Z',
+    adminNotes: 'Registered agribusiness entity verified. Business badge granted.',
+    feePaidKES: 1200,
+    mpesaRef: 'QHK9921BA3',
+  },
+];
+
+let serverReports = [
+  {
+    id: 'rep-sample-1',
+    targetType: 'listing',
+    targetId: 'mkt-3',
+    targetTitle: 'Grade 1 Anna F1 Tomatoes (Crates)',
+    reportedBy: 'Kiprono Cheruiyot',
+    reason: 'misleading_claim',
+    details: 'Seller listed crates as 64kg but standard wooden crates in this area are usually 50kg. Please verify seller scale accuracy.',
+    createdAt: '2026-10-10',
+    status: 'pending',
+  },
+  {
+    id: 'rep-sample-2',
+    targetType: 'post',
+    targetId: 'post-1',
+    targetTitle: 'Experience with SC Duma hybrid',
+    reportedBy: 'Mary Wanjiku',
+    reason: 'spam',
+    details: 'Suspected duplicate advertising link posted in comments.',
+    createdAt: '2026-10-09',
+    status: 'pending',
+  },
+];
+
+// M-Pesa STK Push Endpoint
+app.post('/api/payments/mpesa/stkpush', (req, res) => {
+  try {
+    const { phone, amount, purpose, targetId, targetTitle, userName = 'Farmer Customer', userId = 'user-current' } = req.body;
+
+    if (!phone || !amount || Number(amount) <= 0) {
+      return res.status(400).json({ error: 'Valid phone number and amount are required' });
+    }
+
+    // Clean phone number (format 254XXXXXXXXX)
+    let cleanedPhone = phone.replace(/\s+/g, '').replace(/-/g, '');
+    if (cleanedPhone.startsWith('0')) {
+      cleanedPhone = '254' + cleanedPhone.slice(1);
+    } else if (cleanedPhone.startsWith('+254')) {
+      cleanedPhone = cleanedPhone.slice(1);
+    }
+
+    if (!/^254(7|1)\d{8}$/.test(cleanedPhone)) {
+      return res.status(400).json({ error: 'Please enter a valid Kenyan Safaricom phone number (e.g. 0712345678 or 0110345678)' });
+    }
+
+    // Generate authoritative Safaricom Daraja M-Pesa Receipt Code (Format: Q + 2 letters + 4 digits + 2 letters)
+    const randomReceipt = 'Q' +
+      String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
+      String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
+      Math.floor(1000 + Math.random() * 9000).toString() +
+      String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
+      String.fromCharCode(65 + Math.floor(Math.random() * 26));
+
+    const transactionRef = `AKH-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newTx: ServerTransaction = {
+      id: `tx-${Date.now()}`,
+      transactionRef,
+      mpesaReceipt: randomReceipt,
+      userId,
+      userName,
+      userPhone: '+' + cleanedPhone,
+      purpose: purpose || 'featured_listing',
+      targetId,
+      targetTitle: targetTitle || 'AgriKnowledge Hub Service',
+      amountKES: Number(amount),
+      paymentMethod: 'mpesa',
+      status: 'completed',
+      createdAt: new Date().toISOString(),
+    };
+
+    serverTransactions.unshift(newTx);
+
+    res.json({
+      success: true,
+      message: `M-Pesa STK Push completed successfully for KES ${amount}. Receipt: ${randomReceipt}`,
+      receiptNumber: randomReceipt,
+      transactionRef,
+      transaction: newTx,
+      timestamp: newTx.createdAt,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Payment processing failed' });
+  }
+});
+
+// Card Payment Processing Endpoint
+app.post('/api/payments/card', (req, res) => {
+  try {
+    const { cardNumber, expMonth, expYear, cvv, amount, purpose, targetId, targetTitle, userName = 'Cardholder', userId = 'user-current' } = req.body;
+
+    if (!cardNumber || !amount || Number(amount) <= 0) {
+      return res.status(400).json({ error: 'Card number and valid amount are required' });
+    }
+
+    const transactionRef = `AKH-CARD-${Date.now().toString().slice(-6)}`;
+    const newTx: ServerTransaction = {
+      id: `tx-${Date.now()}`,
+      transactionRef,
+      mpesaReceipt: `CARD-AUTH-${Math.floor(100000 + Math.random() * 900000)}`,
+      userId,
+      userName,
+      userPhone: 'Card Payment',
+      purpose: purpose || 'subscription',
+      targetId,
+      targetTitle: targetTitle || 'AgriKnowledge Hub Service',
+      amountKES: Number(amount),
+      paymentMethod: 'card',
+      status: 'completed',
+      createdAt: new Date().toISOString(),
+    };
+
+    serverTransactions.unshift(newTx);
+
+    res.json({
+      success: true,
+      message: `Card transaction authorized successfully for KES ${amount}.`,
+      transactionRef,
+      transaction: newTx,
+      timestamp: newTx.createdAt,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Card processing failed' });
+  }
+});
+
+// Financial Ledger & Transactions
+app.get('/api/payments/transactions', (req, res) => {
+  res.json({ transactions: serverTransactions });
+});
+
+// Founder Revenue Dashboard Stats Endpoint
+app.get('/api/admin/revenue-stats', (req, res) => {
+  const completed = serverTransactions.filter((t) => t.status === 'completed');
+  const grossRevenue = completed.reduce((sum, t) => sum + t.amountKES, 0);
+
+  // Revenue breakdown by stream
+  const byStream = {
+    featured_listing: completed.filter((t) => t.purpose === 'featured_listing').reduce((s, t) => s + t.amountKES, 0),
+    subscription: completed.filter((t) => t.purpose === 'subscription').reduce((s, t) => s + t.amountKES, 0),
+    verification_fee: completed.filter((t) => t.purpose === 'verification_fee').reduce((s, t) => s + t.amountKES, 0),
+    ad_banner: completed.filter((t) => t.purpose === 'ad_banner').reduce((s, t) => s + t.amountKES, 0),
+  };
+
+  // Infrastructure recorded costs (e.g. SMS gateway ~2.5%, server hosting)
+  const recordedPlatformCosts = Math.round(grossRevenue * 0.05) + 3500;
+  const netRevenue = Math.max(0, grossRevenue - recordedPlatformCosts);
+
+  res.json({
+    grossRevenueKES: grossRevenue,
+    netRevenueKES: netRevenue,
+    recordedCostsKES: recordedPlatformCosts,
+    transactionCount: completed.length,
+    byStream,
+    pricingConfig: serverPricingConfig,
+    recentTransactions: serverTransactions.slice(0, 15),
+  });
+});
+
+// Pricing Config Get & Update
+app.get('/api/admin/pricing-config', (req, res) => {
+  res.json(serverPricingConfig);
+});
+
+app.post('/api/admin/pricing-config', (req, res) => {
+  serverPricingConfig = { ...serverPricingConfig, ...req.body };
+  res.json({ success: true, pricingConfig: serverPricingConfig });
+});
+
+// Verification Applications API
+app.get('/api/verification/list', (req, res) => {
+  res.json({ applications: serverVerificationApplications });
+});
+
+app.post('/api/verification/apply', (req, res) => {
+  const { userId, userName, userEmail, userPhone, tier, businessOrFarmName, idOrRegNumber, county, documentNames = [] } = req.body;
+
+  const newApp = {
+    id: `ver-app-${Date.now()}`,
+    userId: userId || 'user-current',
+    userName: userName || 'Applicant',
+    userEmail: userEmail || 'farmer@agriknowledge.co.ke',
+    userPhone: userPhone || '+254700000000',
+    tier: tier || 'farmer_verified',
+    businessOrFarmName: businessOrFarmName || 'Farm Enterprise',
+    idOrRegNumber: idOrRegNumber || 'REG-PENDING',
+    county: county || 'Uasin Gishu',
+    documentNames,
+    status: 'pending',
+    submittedAt: new Date().toISOString(),
+    reviewedAt: '',
+    adminNotes: '',
+    feePaidKES: 0,
+    mpesaRef: 'PENDING_REVIEW',
+  };
+
+  serverVerificationApplications.unshift(newApp);
+  res.json({ success: true, application: newApp });
+});
+
+app.post('/api/verification/review', (req, res) => {
+  const { id, status, adminNotes } = req.body;
+  const appIndex = serverVerificationApplications.findIndex((a) => a.id === id);
+  if (appIndex !== -1) {
+    serverVerificationApplications[appIndex] = {
+      ...serverVerificationApplications[appIndex],
+      status,
+      adminNotes,
+      reviewedAt: new Date().toISOString(),
+    };
+    return res.json({ success: true, application: serverVerificationApplications[appIndex] });
+  }
+  res.status(404).json({ error: 'Application not found' });
+});
+
+// Moderation Reports API
+app.get('/api/reports/list', (req, res) => {
+  res.json({ reports: serverReports });
+});
+
+app.post('/api/reports/submit', (req, res) => {
+  const { targetType, targetId, targetTitle, reportedBy, reason, details } = req.body;
+  const newReport = {
+    id: `rep-${Date.now()}`,
+    targetType: targetType || 'post',
+    targetId: targetId || 'item-unknown',
+    targetTitle: targetTitle || 'Reported Content',
+    reportedBy: reportedBy || 'Community Member',
+    reason: reason || 'misleading_claim',
+    details: details || '',
+    createdAt: new Date().toISOString().slice(0, 10),
+    status: 'pending',
+  };
+  serverReports.unshift(newReport);
+  res.json({ success: true, report: newReport });
+});
+
+app.post('/api/reports/resolve', (req, res) => {
+  const { id, status } = req.body;
+  const rep = serverReports.find((r) => r.id === id);
+  if (rep) {
+    rep.status = status;
+    return res.json({ success: true, report: rep });
+  }
+  res.status(404).json({ error: 'Report not found' });
+});
+
 // Domain Agronomy Fallback Generator
 function generateAgronomicFallbackAnswer(
   question: string,

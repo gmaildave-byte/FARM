@@ -17,12 +17,18 @@ import {
   Eye,
   DollarSign,
   Tag,
-  ArrowRight
+  ArrowRight,
+  Zap,
+  Sparkles,
+  Camera
 } from 'lucide-react';
 import { initialMarketplaceListings } from '../data/marketplaceListings';
-import { MarketplaceListing, MarketplaceCategory, BuyerEnquiry, ReportItem } from '../types';
+import { MarketplaceListing, MarketplaceCategory, BuyerEnquiry, ReportItem, PaymentTransaction } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { kenyanCounties } from '../components/Navbar';
+import { PromotionModal } from '../components/PromotionModal';
+import { SubscriptionModal } from '../components/SubscriptionModal';
+import { ReportModal } from '../components/ReportModal';
 
 interface MarketplacePageProps {
   onSelectSellerProfile?: (username: string) => void;
@@ -34,7 +40,7 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedCounty, setSelectedCounty] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewFilter, setViewFilter] = useState<'all' | 'saved' | 'my-listings'>('all');
+  const [viewFilter, setViewFilter] = useState<'all' | 'saved' | 'my-listings' | 'featured'>('all');
 
   // Enquiries & Reports state
   const [enquiries, setEnquiries] = useState<BuyerEnquiry[]>([]);
@@ -45,7 +51,10 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
   const [activeListingForDetail, setActiveListingForDetail] = useState<MarketplaceListing | null>(null);
   const [activeListingForEnquiry, setActiveListingForEnquiry] = useState<MarketplaceListing | null>(null);
   const [activeListingForReport, setActiveListingForReport] = useState<MarketplaceListing | null>(null);
+  const [activeListingForPromotion, setActiveListingForPromotion] = useState<MarketplaceListing | null>(null);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [uploadedListingImage, setUploadedListingImage] = useState<string | null>(null);
 
   // New Listing Form State
   const [newTitle, setNewTitle] = useState('');
@@ -102,6 +111,26 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
       showToast(isSaved ? 'Listing saved to your bookmarks' : 'Listing removed from bookmarks');
       return { ...prev, [id]: isSaved };
     });
+  };
+
+  const handleCustomImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setUploadedListingImage(result);
+        setNewImageUrl(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePromotedSuccess = (listingId: string, days: number, tx: PaymentTransaction) => {
+    setListings((prev) =>
+      prev.map((it) => (it.id === listingId ? { ...it, isFeatured: true } : it))
+    );
+    showToast(`Listing successfully promoted for ${days} days! (Receipt: ${tx.mpesaReceipt || tx.transactionRef})`);
   };
 
   const handleCreateListing = (e: React.FormEvent) => {
@@ -250,6 +279,29 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
         </div>
       </div>
 
+      {/* Seller Growth & Monetization Banner */}
+      <div className="bg-gradient-to-r from-emerald-950 via-[#183D29] to-emerald-900 text-[#FAF7F0] p-5 sm:p-6 rounded-3xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-emerald-800">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-stone-900 font-bold text-[10px] uppercase tracking-wider">
+            <Sparkles className="w-3 h-3" />
+            <span>Agribusiness Growth Suite</span>
+          </div>
+          <h3 className="text-base sm:text-lg font-bold font-serif text-white">
+            Reach Verified Buyers & Cooperatives Across 47 Counties
+          </h3>
+          <p className="text-xs text-emerald-200/90 max-w-xl leading-relaxed">
+            Upgrade to a <strong>Business Plan</strong> to unlock 25 active listings, a Verified Agribusiness trust badge, supplier directory features, and buyer analytics.
+          </p>
+        </div>
+        <button
+          onClick={() => setSubscriptionModalOpen(true)}
+          className="bg-amber-400 hover:bg-amber-300 text-stone-950 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition shrink-0 flex items-center gap-1.5"
+        >
+          <span>Explore Business Plans</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
       {/* Search and Filter Ribbon */}
       <div className="bg-white rounded-2xl border border-stone-200 p-4 space-y-4 shadow-xs">
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -381,8 +433,16 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                       loading="lazy"
                     />
-                    <div className="absolute top-3 left-3 bg-[#183D29]/90 text-[#FAF7F0] text-[11px] font-bold px-2.5 py-0.5 rounded-full capitalize backdrop-blur-xs">
-                      {item.category}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      <span className="bg-[#183D29]/90 text-[#FAF7F0] text-[11px] font-bold px-2.5 py-0.5 rounded-full capitalize backdrop-blur-xs">
+                        {item.category}
+                      </span>
+                      {item.isFeatured && (
+                        <span className="bg-amber-400 text-stone-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs flex items-center gap-1">
+                          <Zap className="w-2.5 h-2.5 fill-current" />
+                          <span>Featured</span>
+                        </span>
+                      )}
                     </div>
                     <button
                       onClick={() => handleToggleSave(item.id)}
@@ -465,6 +525,33 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
                           <span>Make Enquiry</span>
+                        </button>
+                      </div>
+
+                      {/* Quick Action Row: Promote & WhatsApp */}
+                      <div className="flex items-center justify-between pt-1 border-t border-stone-100/80 text-[11px]">
+                        <button
+                          onClick={() => setActiveListingForPromotion(item)}
+                          className="inline-flex items-center gap-1 font-bold text-amber-800 bg-amber-50 hover:bg-amber-100/80 px-2 py-1 rounded-lg border border-amber-200/80 transition"
+                        >
+                          <Zap className="w-3 h-3 fill-current text-amber-600" />
+                          <span>Promote</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const cleanPhone = (item.sellerPhone || '+254700000000').replace(/[^0-9]/g, '');
+                            window.open(
+                              `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(
+                                `Hello ${item.sellerName}, I am inquiring about your listing "${item.title}" on AgriKnowledge Hub.`
+                              )}`,
+                              '_blank'
+                            );
+                          }}
+                          className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100/80 px-2 py-1 rounded-lg border border-emerald-200/80 transition"
+                        >
+                          <MessageCircle className="w-3 h-3 text-emerald-700" />
+                          <span>WhatsApp</span>
                         </button>
                       </div>
                     </div>
@@ -867,6 +954,45 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
                 />
               </div>
 
+              {/* Photo Upload Section */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  Product / Service Photograph
+                </label>
+                <div className="flex items-center gap-3">
+                  <label className="flex-1 flex items-center justify-center gap-2 p-3 border-2 border-dashed border-stone-300 hover:border-emerald-600 rounded-xl bg-white cursor-pointer transition text-xs font-semibold text-stone-700">
+                    <Camera className="w-4 h-4 text-emerald-800" />
+                    <span>Upload photo from your device</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCustomImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {uploadedListingImage && (
+                  <div className="mt-2 relative rounded-xl overflow-hidden h-28 bg-stone-100 border border-stone-200">
+                    <img
+                      src={uploadedListingImage}
+                      alt="Uploaded listing preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadedListingImage(null);
+                        setNewImageUrl('https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80');
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-stone-900/70 text-white text-xs"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">Delivery Terms</label>
@@ -907,6 +1033,44 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
             </form>
           </div>
         </div>
+      )}
+
+      {/* Promotion Modal */}
+      {activeListingForPromotion && (
+        <PromotionModal
+          isOpen={Boolean(activeListingForPromotion)}
+          onClose={() => setActiveListingForPromotion(null)}
+          listing={activeListingForPromotion}
+          onPromotedSuccess={handlePromotedSuccess}
+        />
+      )}
+
+      {/* Subscription Modal */}
+      {subscriptionModalOpen && (
+        <SubscriptionModal
+          isOpen={subscriptionModalOpen}
+          onClose={() => setSubscriptionModalOpen(false)}
+          currentPlan="free"
+          onPlanUpgraded={(plan) => {
+            showToast(`Upgraded to ${plan.toUpperCase()} plan! Benefits activated immediately.`);
+            setSubscriptionModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* Report Modal */}
+      {activeListingForReport && (
+        <ReportModal
+          isOpen={Boolean(activeListingForReport)}
+          onClose={() => setActiveListingForReport(null)}
+          targetType="listing"
+          targetId={activeListingForReport.id}
+          targetTitle={activeListingForReport.title}
+          onReportSubmitted={() => {
+            showToast('Listing submitted to moderation review queue.');
+            setActiveListingForReport(null);
+          }}
+        />
       )}
     </div>
   );
