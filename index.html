@@ -17,6 +17,24 @@
     <meta property="og:description" content="Global agricultural community, short-form reels, field stories, direct farmer chat, 26 precision farm tools, and marketplace founded by Adams Kipkoech Kering." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      // Suppress Vite HMR WebSocket proxy closing errors in preview environments
+      (function() {
+        const origConsoleError = console.error;
+        console.error = function(...args) {
+          if (args[0] && typeof args[0] === 'string' && (args[0].includes('WebSocket') || args[0].includes('[vite] Error: WebSocket closed'))) {
+            return;
+          }
+          origConsoleError.apply(console, args);
+        };
+        window.addEventListener('error', function(event) {
+          if (event.message && (event.message.includes('WebSocket') || event.message.includes('ws://') || event.message.includes('wss://'))) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -14,7 +14,7 @@ app.use(express.json({ limit: '10mb' }));
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'AgriKnowledge Hub API',
+    service: 'AgriHub API',
     timestamp: new Date().toISOString(),
     geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
   });
@@ -36,7 +36,7 @@ app.post('/api/ai/ask', async (req, res) => {
       return res.json({
         answer: generateAgronomicFallbackAnswer(question, language, county, cropOrLivestock),
         isFallback: true,
-        source: 'AgriKnowledge Hub Agronomy Knowledge Engine (Standard Mode)',
+        source: 'AgriHub Agronomy Knowledge Engine (Standard Mode)',
         disclaimer: 'This guidance is synthesized from KALRO and Kenya Ministry of Agriculture production manuals. For critical veterinary or plant health emergencies, consult your local Sub-County Agricultural Officer.',
       });
     }
@@ -51,7 +51,7 @@ app.post('/api/ai/ask', async (req, res) => {
       },
     });
 
-    const systemInstruction = `You are the Lead Agricultural Scientist and AI Agronomy Advisor for "AgriKnowledge Hub", an agricultural platform focused primarily on Kenya and East Africa.
+    const systemInstruction = `You are the Lead Agricultural Scientist and AI Agronomy Advisor for "AgriHub", an agricultural platform focused primarily on Kenya, East Africa, and global farming communities.
 Your knowledge base is grounded in official recommendations from the Kenya Agricultural and Livestock Research Organization (KALRO), Kenya Plant Health Inspectorate Service (KEPHIS), Ministry of Agriculture and Livestock Development (MoALD), and international centers (CGIAR/CIMMYT/ICIPE/ILRI).
 
 Guidelines:
@@ -666,7 +666,10 @@ Thank you for your inquiry on practical agricultural production in Kenya.
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: false,
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -678,7 +681,7 @@ async function startServer() {
   }
 
   app.listen(Number(PORT), '0.0.0.0', () => {
-    console.log(`[AgriKnowledge Hub] Full-stack server running on http://0.0.0.0:${PORT}`);
+    console.log(`[AgriHub] Full-stack server running on http://0.0.0.0:${PORT}`);
   });
 }
 
