@@ -14,6 +14,7 @@ export type Page =
   | 'marketplace-create'
   | 'social-feed'
   | 'community'
+  | 'reels'
   | 'profile'
   | 'messages'
   | 'notifications'

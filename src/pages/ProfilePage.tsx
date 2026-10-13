@@ -94,7 +94,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       profile: user,
       role,
       exportTimestamp: new Date().toISOString(),
-      platform: 'AgriKnowledge Hub',
+      platform: 'AgriHub',
       complianceNotice: 'Exported under Kenya Data Protection Act 2019 data portability rights.',
     };
     const blob = new Blob([JSON.stringify(exportObject, null, 2)], { type: 'application/json' });

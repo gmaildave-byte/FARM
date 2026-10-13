@@ -283,7 +283,7 @@ export const DiscoverPage: React.FC<DiscoverPageProps> = ({
           <span>Official Agronomic Sources & Quality Standards</span>
         </div>
         <p className="text-xs text-stone-600 leading-relaxed">
-          AgriKnowledge Hub adheres to official standards published by the <strong>Kenya Agricultural & Livestock Research Organization (KALRO)</strong>, <strong>Kenya Plant Health Inspectorate Service (KEPHIS)</strong>, and <strong>Ministry of Agriculture and Livestock Development (MoALD)</strong>. Educational guides are reviewed regularly by registered agronomy specialists.
+          AgriHub adheres to official standards published by the <strong>Kenya Agricultural & Livestock Research Organization (KALRO)</strong>, <strong>Kenya Plant Health Inspectorate Service (KEPHIS)</strong>, and <strong>Ministry of Agriculture and Livestock Development (MoALD)</strong>. Educational guides are reviewed regularly by registered agronomy specialists.
         </p>
       </div>
     </div>

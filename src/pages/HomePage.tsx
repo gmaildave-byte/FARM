@@ -74,7 +74,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           {/* Tagline Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-800/80 border border-emerald-600/50 text-xs sm:text-sm font-medium text-emerald-200 mb-6 backdrop-blur-xs">
             <Sprout className="w-4 h-4 text-emerald-400" />
-            <span>Trusted Agricultural Knowledge • Stronger Farming • Better Markets</span>
+            <span>Grow Knowledge • Share Progress • Build the Future</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-3xl leading-tight sm:leading-none mb-6">

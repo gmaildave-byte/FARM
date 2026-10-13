@@ -57,7 +57,7 @@ export const initialConversations: Conversation[] = [
         id: 'm1',
         senderId: 'adams',
         senderName: 'Adams Kipkoech Kering',
-        text: 'Habari! Welcome to AgriKnowledge Hub. If you need any assistance with crop calculators, drip irrigation sizing, or farm records, feel free to ask!',
+        text: 'Habari! Welcome to AgriHub. If you need any assistance with crop calculators, drip irrigation sizing, or farm records, feel free to ask!',
         time: '10:30 AM',
         isSelf: false,
       },

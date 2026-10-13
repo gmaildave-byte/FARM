@@ -19,7 +19,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const certNumber = `AKH-CERT-${course.id.toUpperCase().slice(7, 13)}-${Date.now().toString().slice(-6)}`;
+  const certNumber = `AGRIHUB-CERT-${course.id.toUpperCase().slice(7, 13)}-${Date.now().toString().slice(-6)}`;
   const issueDate = new Date().toLocaleDateString('en-KE', {
     day: 'numeric',
     month: 'long',
@@ -49,14 +49,14 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 
           {/* Header */}
           <div className="flex flex-col items-center gap-2">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-800 text-white flex items-center justify-center shadow-md">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-800 to-emerald-950 text-white flex items-center justify-center shadow-md ring-1 ring-emerald-500/20">
               <Sprout className="w-8 h-8 text-emerald-300" />
             </div>
-            <div className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
-              AgriKnowledge <span className="text-emerald-700">Hub</span>
+            <div className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight font-serif">
+              Agri<span className="text-emerald-700">Hub</span>
             </div>
             <div className="text-xs uppercase tracking-widest text-emerald-800 font-bold">
-              Agricultural Learning Centre • Kenya
+              Agricultural Academy • Verified Worldwide
             </div>
           </div>
 
@@ -90,7 +90,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
             <div>
               <div className="font-serif italic text-stone-800 font-bold text-sm">Dr. Beatrice Wambui, PhD</div>
               <div className="text-stone-700 text-[10px] mt-0.5">Dean of Agronomy Instruction</div>
-              <div className="text-stone-700 text-[9px]">AgriKnowledge Hub Faculty</div>
+              <div className="text-stone-700 text-[9px]">AgriHub Academic Board</div>
             </div>
 
             <div className="flex flex-col items-center justify-center">
@@ -111,7 +111,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
         {/* Action Buttons (Print / Close) */}
         <div className="mt-6 flex flex-wrap justify-between items-center gap-3 print:hidden">
           <div className="text-xs text-stone-700">
-            Certificate is permanently stored in your AgriKnowledge Hub profile.
+            Certificate is permanently stored in your AgriHub profile.
           </div>
           <div className="flex gap-2">
             <button

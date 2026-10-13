@@ -1,6 +1,6 @@
 {
-  "name": "AgriKnowledge Hub",
-  "description": "Professional agricultural information, farming community, agricultural marketplace, crop & livestock guides, interactive calculators, and agronomy advisory platform founded by Adams Kipkoech Kering.",
+  "name": "AgriHub",
+  "description": "AgriHub is a premium, global agricultural social network, educational platform, and marketplace founded by Adams Kipkoech Kering. Tagline: Grow Knowledge. Share Progress. Build the Future.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

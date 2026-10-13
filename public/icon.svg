@@ -1,40 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#183D29" />
-      <stop offset="100%" stop-color="#0E2418" />
+    <!-- Premium Emerald Gradient -->
+    <linearGradient id="hubBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#092918" />
+      <stop offset="50%" stop-color="#0f3d26" />
+      <stop offset="100%" stop-color="#041a0d" />
     </linearGradient>
-    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34D399" />
-      <stop offset="100%" stop-color="#10B981" />
+
+    <!-- Fresh Mint Digital Gradient -->
+    <linearGradient id="mintLeaf" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="60%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#6EE7B7" />
     </linearGradient>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+
+    <!-- Tech Golden Harvest Accent -->
+    <linearGradient id="goldPulse" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#FBBF24" />
       <stop offset="100%" stop-color="#D97706" />
     </linearGradient>
+
+    <!-- Subtle Radial Glow -->
+    <radialGradient id="hubGlow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#092918" stop-opacity="0" />
+    </radialGradient>
   </defs>
 
-  <!-- Background with subtle corner radius -->
-  <rect width="512" height="512" rx="104" fill="url(#bgGrad)" />
-
-  <!-- Inner circular badge -->
-  <circle cx="256" cy="256" r="190" fill="none" stroke="#22543D" stroke-width="6" opacity="0.4" />
-
-  <!-- Stylized Agricultural Sprout / Plant -->
-  <!-- Stem -->
-  <path d="M256 380 V 220" stroke="url(#leafGrad)" stroke-width="20" stroke-linecap="round" />
+  <!-- Squircle Base for Mobile & PWA -->
+  <rect width="512" height="512" rx="112" fill="url(#hubBg)" />
+  <rect width="512" height="512" rx="112" fill="url(#hubGlow)" />
   
-  <!-- Soil / Earth curves -->
-  <path d="M176 380 Q 256 405 336 380" stroke="url(#goldGrad)" stroke-width="16" stroke-linecap="round" fill="none" />
-  <path d="M206 410 Q 256 425 306 410" stroke="url(#goldGrad)" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.8" />
+  <!-- Subtle Outer Precision Ring -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#10B981" stroke-width="2.5" stroke-dasharray="8 8" opacity="0.3" />
 
-  <!-- Left Leaf -->
-  <path d="M256 310 C 210 310 160 260 170 200 C 220 200 256 260 256 310 Z" fill="url(#leafGrad)" />
+  <!-- AgriHub Digital Sprout Emblem -->
+  <!-- Central Dynamic Spine / Stem with network nodes -->
+  <path d="M256 390 V 210" stroke="url(#mintLeaf)" stroke-width="18" stroke-linecap="round" />
   
-  <!-- Right Leaf -->
-  <path d="M256 260 C 295 260 345 220 338 165 C 295 165 256 215 256 260 Z" fill="url(#leafGrad)" />
+  <!-- Foundation Seed Base & Terrestrial Horizon -->
+  <path d="M168 390 Q 256 420 344 390" stroke="url(#goldPulse)" stroke-width="16" stroke-linecap="round" fill="none" />
+  <path d="M198 420 Q 256 440 314 420" stroke="url(#goldPulse)" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.7" />
+
+  <!-- Primary Organic & Geometric Left Leaf (Curved upward growth) -->
+  <path d="M256 320 C 180 320 140 250 156 180 C 220 176 256 240 256 320 Z" fill="url(#mintLeaf)" />
   
-  <!-- Central Top Seed Shoot / Sun Ray -->
-  <circle cx="256" cy="140" r="22" fill="url(#goldGrad)" />
-  <path d="M256 175 V 215" stroke="url(#leafGrad)" stroke-width="14" stroke-linecap="round" />
+  <!-- Secondary Geometric Right Leaf (Sunlit angle) -->
+  <path d="M256 260 C 320 260 364 210 352 144 C 294 140 256 195 256 260 Z" fill="url(#mintLeaf)" />
+
+  <!-- Digital Network Connecting Core / Top Sun Orb -->
+  <circle cx="256" cy="130" r="26" fill="url(#goldPulse)" filter="drop-shadow(0 4px 12px rgba(245, 158, 11, 0.4))" />
+  <circle cx="256" cy="130" r="14" fill="#FFFFFF" opacity="0.9" />
+
+  <!-- Interconnected Data Lines on Left Leaf -->
+  <circle cx="195" cy="235" r="7" fill="#FFFFFF" opacity="0.85" />
+  <path d="M195 235 L 256 270" stroke="#FFFFFF" stroke-width="3" opacity="0.4" stroke-dasharray="3 3" />
+
+  <!-- Interconnected Data Node on Right Leaf -->
+  <circle cx="315" cy="195" r="7" fill="#FFFFFF" opacity="0.85" />
+  <path d="M315 195 L 256 220" stroke="#FFFFFF" stroke-width="3" opacity="0.4" stroke-dasharray="3 3" />
 </svg>

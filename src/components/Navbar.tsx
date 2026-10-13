@@ -219,16 +219,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => setCurrentPage('home')}
           className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group shrink-0 min-w-fit"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#183D29] flex items-center justify-center text-white shadow-sm group-hover:bg-[#122e1f] transition shrink-0">
-            <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-300" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#183D29] to-[#0D2818] flex items-center justify-center text-white shadow-sm group-hover:from-[#122e1f] group-hover:to-[#08170e] transition shrink-0 ring-1 ring-emerald-500/20">
+            <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="min-w-0">
             <div className="text-base sm:text-xl font-bold text-stone-900 tracking-tight leading-none flex items-center gap-1 font-serif">
-              <span>AgriKnowledge</span>
+              <span>Agri</span>
               <span className="text-emerald-700">Hub</span>
             </div>
             <div className="text-[11px] text-stone-500 font-medium hidden sm:block mt-0.5 truncate">
-              Trusted Agricultural Knowledge • Stronger Farming • Better Markets
+              Grow Knowledge • Share Progress • Build the Future
             </div>
           </div>
         </div>
@@ -256,7 +256,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={openSearchModal}
             className="md:hidden p-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition"
             aria-label="Search"
-            title="Search AgriKnowledge Hub"
+            title="Search AgriHub"
           >
             <Search className="w-5 h-5" />
           </button>

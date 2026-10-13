@@ -93,13 +93,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base tracking-tight font-serif">
-                {mode === 'login' && 'Sign in to AgriKnowledge Hub'}
+                {mode === 'login' && 'Sign in to AgriHub'}
                 {mode === 'register' && 'Create Farmer or Business Account'}
                 {mode === 'forgot' && 'Reset Account Password'}
               </h3>
               <p className="text-[11px] text-emerald-200/80">
                 {mode === 'login' && 'Access farm records, comments & marketplace'}
-                {mode === 'register' && 'Join thousands of farmers across Kenya'}
+                {mode === 'register' && 'Join thousands of farmers & agribusinesses worldwide'}
                 {mode === 'forgot' && 'Secure password recovery via email'}
               </p>
             </div>

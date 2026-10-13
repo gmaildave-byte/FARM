@@ -29,11 +29,11 @@ export const AboutPage: React.FC = () => {
             <span>Mission & Technology Vision</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight font-serif">
-            About AgriKnowledge Hub
+            About AgriHub
           </h1>
           <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-2xl">
-            <strong>Trusted Agricultural Knowledge. Stronger Farming. Better Markets.</strong><br />
-            AgriKnowledge Hub is an integrated agricultural technology, community, and commerce platform built to equip smallholder farmers, commercial growers, cooperatives, and agribusinesses in Kenya with verified agronomic science, practical farm calculators, and direct marketplace access.
+            <strong>Grow Knowledge. Share Progress. Build the Future.</strong><br />
+            AgriHub is a premium, global agricultural social network, educational platform, and marketplace built to equip smallholder farmers, commercial growers, cooperatives, and agribusinesses worldwide with verified agronomic science, short-form reels, field stories, direct messaging, 26 precision farm tools, and direct commerce.
           </p>
         </div>
       </div>
@@ -46,7 +46,7 @@ export const AboutPage: React.FC = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 pt-1">
-          <div className="w-20 h-20 rounded-2xl bg-[#183D29] text-[#FAF7F0] flex items-center justify-center font-bold text-2xl shadow-sm shrink-0">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#183D29] to-[#0D2818] text-[#FAF7F0] flex items-center justify-center font-bold text-2xl shadow-sm shrink-0 ring-1 ring-emerald-500/20">
             AK
           </div>
           <div className="space-y-1.5">
@@ -54,10 +54,10 @@ export const AboutPage: React.FC = () => {
               Adams Kipkoech Kering
             </h2>
             <div className="text-xs text-stone-600 font-medium">
-              Founder & Lead Software Engineer, AgriKnowledge Hub
+              Founder & Lead Software Engineer, AgriHub
             </div>
             <p className="text-xs text-stone-700 leading-relaxed pt-1">
-              Founded and architected by <strong>Adams Kipkoech Kering</strong> to solve critical bottlenecks in agricultural advisory, input sourcing, and post-harvest market linkage across Kenya. Conceived as a resilient digital platform grounded in Kenya's agro-ecological zones with an extensible architecture for regional and continental scale.
+              Founded and architected by <strong>Adams Kipkoech Kering</strong> to solve critical bottlenecks in agricultural advisory, peer knowledge exchange, social media for farming, input sourcing, and post-harvest market linkage worldwide. Conceived as a resilient digital platform grounded in real-world agronomic science with an extensible architecture for regional and continental scale.
             </p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export const AboutPage: React.FC = () => {
           <span>Agricultural & Veterinary Advisory Standards</span>
         </div>
         <p className="text-xs text-stone-600 leading-relaxed">
-          The crop guides, calculators, pest protocols, and AI responses on AgriKnowledge Hub are intended for educational and agronomic decision-support purposes. Grounded in peer-reviewed KALRO manuals and KEPHIS variety releases, they do not replace on-site physical soil or tissue diagnostics by a certified agronomist. Always verify chemical registrations directly with the Pest Control Products Board (PCPB) and consult a registered veterinary officer for acute livestock ailments.
+          The crop guides, calculators, pest protocols, and AI responses on AgriHub are intended for educational and agronomic decision-support purposes. Grounded in peer-reviewed KALRO manuals and KEPHIS variety releases, they do not replace on-site physical soil or tissue diagnostics by a certified agronomist. Always verify chemical registrations directly with the Pest Control Products Board (PCPB) and consult a registered veterinary officer for acute livestock ailments.
         </p>
       </div>
 
@@ -145,7 +145,7 @@ export const AboutPage: React.FC = () => {
           <span>Worldwide Agricultural Expansion Roadmap</span>
         </div>
         <p className="text-xs text-stone-600 leading-relaxed">
-          While AgriKnowledge Hub has launched with deep Kenyan localization (47 counties, bimodal rainfall, KES benchmarks), its software architecture is engineered for international agricultural scale. Multi-currency support (KES, UGX, TZS, NGN, USD, EUR, GBP), multi-language frameworks, and modular climatic zones enable rapid rollout to East Africa (Uganda, Tanzania, Rwanda), West Africa, and global tropical/subtropical farming communities.
+          While AgriHub has launched with deep Kenyan localization (47 counties, bimodal rainfall, KES benchmarks), its software architecture is engineered for international agricultural scale. Multi-currency support (KES, UGX, TZS, NGN, USD, EUR, GBP), multi-language frameworks, and modular climatic zones enable rapid rollout to East Africa (Uganda, Tanzania, Rwanda), West Africa, and global tropical/subtropical farming communities.
         </p>
       </div>
 
@@ -159,7 +159,7 @@ export const AboutPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4 text-emerald-400" />
-            <span>support@agriknowledgehub.com</span>
+            <span>support@agrihub.app</span>
           </div>
           <div className="flex items-center gap-2">
             <Phone className="w-4 h-4 text-emerald-400" />

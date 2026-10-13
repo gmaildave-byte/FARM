@@ -28,16 +28,16 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
         {/* Brand & Mission & Support Email (5 cols) */}
         <div className="md:col-span-5 space-y-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-700 flex items-center justify-center text-white">
-              <Sprout className="w-5 h-5 text-emerald-200" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-900 flex items-center justify-center text-white ring-1 ring-emerald-500/30">
+              <Sprout className="w-5 h-5 text-emerald-300" />
             </div>
             <div className="text-lg font-bold text-white tracking-tight font-serif">
-              <span>AgriKnowledge</span>
+              <span>Agri</span>
               <span className="text-emerald-400">Hub</span>
             </div>
           </div>
           <p className="text-xs text-stone-400 leading-relaxed max-w-sm">
-            <strong>Trusted Agricultural Knowledge. Stronger Farming. Better Markets.</strong><br />
+            <strong>Grow Knowledge. Share Progress. Build the Future.</strong><br />
             Founded and developed by <strong>Adams Kipkoech Kering</strong>.
           </p>
 
@@ -45,10 +45,10 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
             <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>Direct Support: </span>
             <a
-              href="mailto:support@agriknowledgehub.com"
+              href="mailto:support@agrihub.app"
               className="text-emerald-400 hover:text-emerald-300 underline font-medium"
             >
-              support@agriknowledgehub.com
+              support@agrihub.app
             </a>
           </div>
         </div>
@@ -126,7 +126,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
       <div className="border-t border-stone-800 py-3.5 px-4 sm:px-8 text-center text-xs text-stone-400">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
           <div className="text-[11px] sm:text-xs">
-            © {new Date().getFullYear()} AgriKnowledge Hub • Founded & Developed by Adams Kipkoech Kering.
+            © {new Date().getFullYear()} AgriHub • Founded & Developed by Adams Kipkoech Kering.
           </div>
           <div className="flex flex-wrap justify-center gap-4 text-[11px] sm:text-xs">
             <button onClick={() => setCurrentPage('about')} className="hover:text-stone-300 transition">
