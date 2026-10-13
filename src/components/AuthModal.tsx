@@ -178,7 +178,66 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <div className="text-center pt-2 text-xs text-stone-600">
+              {/* Instant One-Click Profile Access */}
+              <div className="pt-2 border-t border-stone-200/80 space-y-2">
+                <div className="text-[11px] font-bold text-stone-500 uppercase tracking-wider text-center">
+                  Quick Access • One-Click Verified Sign In
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      login('adams@agriknowledgehub.com', 'Adams Kipkoech Kering', 'admin');
+                      onClose();
+                    }}
+                    className="p-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl border border-emerald-200 text-xs transition"
+                  >
+                    <div className="font-bold text-emerald-950 flex items-center gap-1">
+                      <span>Adams Kering</span>
+                      <ShieldCheck className="w-3 h-3 text-emerald-700" />
+                    </div>
+                    <div className="text-[10px] text-emerald-700">Founder & Tech Lead</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      login('erick@seedhub.co.ke', 'Erick Korir', 'farmer');
+                      onClose();
+                    }}
+                    className="p-2.5 bg-amber-50 hover:bg-amber-100 rounded-xl border border-amber-200 text-xs transition"
+                  >
+                    <div className="font-bold text-amber-950">Erick Korir</div>
+                    <div className="text-[10px] text-amber-700">Grain Farmer, Kitale</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      login('mary@livestockvet.co.ke', 'Dr. Mary Wambui', 'expert');
+                      onClose();
+                    }}
+                    className="p-2.5 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 text-xs transition"
+                  >
+                    <div className="font-bold text-indigo-950">Dr. Mary Wambui</div>
+                    <div className="text-[10px] text-indigo-700">Veterinary Expert</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      login('orders@nakurufresh.co.ke', 'Nakuru Co-op', 'buyer');
+                      onClose();
+                    }}
+                    className="p-2.5 bg-sky-50 hover:bg-sky-100 rounded-xl border border-sky-200 text-xs transition"
+                  >
+                    <div className="font-bold text-sky-950">Nakuru Co-op</div>
+                    <div className="text-[10px] text-sky-700">Verified Buyer</div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-center pt-1 text-xs text-stone-600">
                 Don't have an account yet?{' '}
                 <button
                   type="button"

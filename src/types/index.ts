@@ -551,12 +551,15 @@ export interface ForumPost {
   tags: string[];
   replies: {
     id: string;
+    parentCommentId?: string;
+    replyToAuthor?: string;
     author: string;
     authorUsername?: string;
     authorRole: string;
     authorAvatar?: string;
     text: string;
     timestamp: string;
+    likes?: number;
   }[];
 }
 

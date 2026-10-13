@@ -18,7 +18,9 @@ import {
   Filter,
   Info,
   Trash2,
-  Edit2
+  Edit2,
+  CornerDownRight,
+  Play
 } from 'lucide-react';
 import { forumPostsData } from '../data/forum';
 import { ForumPost, ReportItem } from '../types';
@@ -26,6 +28,8 @@ import { useAuth } from '../context/AuthContext';
 import { kenyanCounties } from '../components/Navbar';
 import { ShareSheetModal } from '../components/ShareSheetModal';
 import { ReportModal } from '../components/ReportModal';
+import { AgriStoriesBar } from '../components/AgriStoriesBar';
+import { AgriReelsFeed } from '../components/AgriReelsFeed';
 
 interface CommunityPageProps {
   isMobileFrame?: boolean;
@@ -46,11 +50,19 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
     'Ann M.': true,
   });
 
+  // Mode: discussions vs reels
+  const [communityMode, setCommunityMode] = useState<'feed' | 'reels'>('feed');
+
   // Feed tabs: latest, following, relevant, saved
   const [activeFeedTab, setActiveFeedTab] = useState<'latest' | 'following' | 'relevant' | 'saved'>('latest');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
+  const [replyingToTarget, setReplyingToTarget] = useState<{
+    postId: string;
+    commentId: string;
+    authorName: string;
+  } | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
   const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState<string | null>(null);
@@ -135,11 +147,14 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
     setPosts((currentList) =>
       currentList.map((p) => {
         if (p.id === postId) {
+          const isThreadedReply = replyingToTarget && replyingToTarget.postId === postId;
           const newReply = {
             id: `rep-${Date.now()}`,
-            author: user?.name || 'Registered Farmer',
-            authorUsername: user?.username || 'farmer_kenya',
-            authorRole: 'Grower',
+            parentCommentId: isThreadedReply ? replyingToTarget.commentId : undefined,
+            replyToAuthor: isThreadedReply ? replyingToTarget.authorName : undefined,
+            author: user?.name || 'Adams Kipkoech Kering',
+            authorUsername: user?.username || 'adams_kering',
+            authorRole: 'Grower & Contributor',
             text: newCommentText.trim(),
             timestamp: 'Just now',
           };
@@ -153,6 +168,8 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
       })
     );
     setNewCommentText('');
+    setReplyingToTarget(null);
+    showToast('Reply added to discussion thread!');
   };
 
   const handleCreatePost = (e: React.FormEvent) => {
@@ -264,26 +281,65 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
       )}
 
       {/* Header matching brand identity */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 pb-4 border-b border-stone-200/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 pb-3 border-b border-stone-200/80">
         <div>
-          <h1 className="text-[32px] sm:text-[34px] font-bold text-[#183D29] tracking-tight font-serif select-none leading-none">
-            Community
+          <h1 className="text-[28px] sm:text-[32px] font-bold text-[#183D29] tracking-tight font-serif select-none leading-none">
+            Agricultural Community & Media
           </h1>
           <p className="text-xs text-stone-500 mt-1">
-            Verified agricultural discussions, harvests, and field updates across Kenya
+            Verified field updates, farming stories, short reels, and agronomic Q&A across Kenya
           </p>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Discussions vs Reels View Switcher */}
+          <div className="flex items-center bg-stone-100 p-1 rounded-xl border border-stone-200/60 text-xs">
+            <button
+              onClick={() => setCommunityMode('feed')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                communityMode === 'feed'
+                  ? 'bg-white text-[#183D29] shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Discussions</span>
+            </button>
+            <button
+              onClick={() => setCommunityMode('reels')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                communityMode === 'reels'
+                  ? 'bg-[#183D29] text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>AgriReels</span>
+            </button>
+          </div>
+
           <button
             onClick={() => setIsNewPostOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#183D29] hover:bg-[#122e1f] px-4 py-2 rounded-xl transition shadow-xs"
+            className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#183D29] hover:bg-[#122e1f] px-3.5 py-2 rounded-xl transition shadow-xs shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Share Field Update</span>
+            <span className="hidden sm:inline">Share Post</span>
           </button>
         </div>
       </div>
+
+      {/* 24hr Field Stories Bar (Instagram Style) */}
+      <div className="my-3">
+        <AgriStoriesBar />
+      </div>
+
+      {/* If AgriReels mode is selected, show AgriReelsFeed */}
+      {communityMode === 'reels' ? (
+        <div className="pt-2">
+          <AgriReelsFeed />
+        </div>
+      ) : (
+        <>
 
       {/* Feed Filters Ribbon */}
       <div className="flex flex-wrap items-center justify-between gap-2 py-3 border-b border-stone-200/60 text-xs">
@@ -589,41 +645,122 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
                   </button>
                 </div>
 
-                {/* Expandable Comments Drawer */}
+                {/* Expandable Comments Drawer with Threaded Replies */}
                 {commentsOpen && (
                   <div className="mt-3 bg-stone-100/70 rounded-2xl p-3.5 space-y-3 border border-stone-200/60 animate-in fade-in duration-200">
-                    <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                       {post.replies.length === 0 ? (
                         <p className="text-xs text-stone-500 italic py-1">
-                          No replies yet. Be the first to share your experience!
+                          No replies yet. Be the first to share your experience or ask an agronomy question!
                         </p>
                       ) : (
-                        post.replies.map((reply) => (
-                          <div
-                            key={reply.id}
-                            className="text-xs bg-white p-3 rounded-xl border border-stone-200/50 space-y-1 shadow-2xs"
-                          >
-                            <div className="flex items-center justify-between text-stone-500">
-                              <span className="font-bold text-stone-900">
-                                {reply.author}
-                              </span>
-                              <span className="text-[10px] text-stone-400">
-                                {reply.timestamp}
-                              </span>
-                            </div>
-                            <p className="text-stone-700 text-[13px] leading-relaxed">
-                              {reply.text}
-                            </p>
-                          </div>
-                        ))
+                        post.replies
+                          .filter((r) => !r.parentCommentId)
+                          .map((reply) => {
+                            const childReplies = post.replies.filter((r) => r.parentCommentId === reply.id);
+
+                            return (
+                              <div
+                                key={reply.id}
+                                className="text-xs bg-white p-3 rounded-xl border border-stone-200/60 space-y-1.5 shadow-2xs"
+                              >
+                                <div className="flex items-center justify-between text-stone-500">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-bold text-stone-900">{reply.author}</span>
+                                    <span className="text-[10px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-medium">
+                                      {reply.authorRole || 'Farmer'}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-stone-400">{reply.timestamp}</span>
+                                </div>
+                                <p className="text-stone-700 text-[13px] leading-relaxed">{reply.text}</p>
+
+                                <div className="flex items-center gap-3 pt-0.5">
+                                  <button
+                                    onClick={() =>
+                                      setReplyingToTarget({
+                                        postId: post.id,
+                                        commentId: reply.id,
+                                        authorName: reply.author,
+                                      })
+                                    }
+                                    className="flex items-center gap-1 text-[11px] text-emerald-800 font-semibold hover:underline"
+                                  >
+                                    <CornerDownRight className="w-3 h-3 text-emerald-700" />
+                                    <span>Reply</span>
+                                  </button>
+                                </div>
+
+                                {/* Threaded Replies Indented Under Parent Comment */}
+                                {childReplies.length > 0 && (
+                                  <div className="border-l-2 border-emerald-600/40 pl-3 ml-2 mt-2 space-y-2">
+                                    {childReplies.map((child) => (
+                                      <div
+                                        key={child.id}
+                                        className="text-xs bg-stone-50 p-2.5 rounded-lg border border-stone-200/70 space-y-1"
+                                      >
+                                        <div className="flex items-center justify-between text-stone-500">
+                                          <div className="flex items-center gap-1.5 font-bold text-stone-900">
+                                            <span>{child.author}</span>
+                                            <span className="text-[10px] text-stone-400 font-normal">replied to</span>
+                                            <span className="text-emerald-700 text-[11px]">
+                                              @{child.replyToAuthor || reply.author}
+                                            </span>
+                                          </div>
+                                          <span className="text-[10px] text-stone-400">{child.timestamp}</span>
+                                        </div>
+                                        <p className="text-stone-700 text-[12.5px] leading-relaxed">{child.text}</p>
+                                        <button
+                                          onClick={() =>
+                                            setReplyingToTarget({
+                                              postId: post.id,
+                                              commentId: reply.id,
+                                              authorName: child.author,
+                                            })
+                                          }
+                                          className="flex items-center gap-1 text-[10px] text-emerald-800 font-semibold hover:underline"
+                                        >
+                                          <CornerDownRight className="w-2.5 h-2.5" />
+                                          <span>Reply</span>
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
                       )}
                     </div>
+
+                    {/* Active Replying To Target Notification */}
+                    {replyingToTarget && replyingToTarget.postId === post.id && (
+                      <div className="flex items-center justify-between bg-emerald-50 px-3 py-1.5 rounded-xl text-xs text-emerald-950 border border-emerald-200 animate-in fade-in">
+                        <div className="flex items-center gap-1.5">
+                          <CornerDownRight className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>
+                            Replying to <strong>@{replyingToTarget.authorName}</strong>
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setReplyingToTarget(null)}
+                          className="text-stone-400 hover:text-stone-700 p-0.5"
+                          title="Cancel reply"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
 
                     {/* Add comment input */}
                     <div className="flex items-center gap-2 pt-1 border-t border-stone-200/60">
                       <input
                         type="text"
-                        placeholder="Write an agronomic answer or comment..."
+                        placeholder={
+                          replyingToTarget && replyingToTarget.postId === post.id
+                            ? `Write reply to @${replyingToTarget.authorName}...`
+                            : 'Write an agronomic answer or comment...'
+                        }
                         value={newCommentText}
                         onChange={(e) => setNewCommentText(e.target.value)}
                         onKeyDown={(e) => {
@@ -646,6 +783,8 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
           })
         )}
       </div>
+      </>
+      )}
 
       {/* Edit Post Modal */}
       {editingPost && (

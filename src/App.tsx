@@ -32,6 +32,7 @@ import { EventsPage } from './pages/EventsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { LegalPage } from './pages/LegalPage';
+import { MessagesPage } from './pages/MessagesPage';
 import { CreateActionModal } from './components/CreateActionModal';
 import type { Page } from './types';
 import { ArrowLeft } from 'lucide-react';
@@ -55,9 +56,9 @@ export default function App() {
     }
   };
 
-  // Scroll to top on page change
+  // Instant scroll to top on page change so user is immediately where they need to be
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [currentPage]);
 
   const handleSelectSearchResult = (page: Page) => {
@@ -81,6 +82,8 @@ export default function App() {
             onNavigateToProfile={() => setCurrentPage('profile')}
           />
         );
+      case 'messages':
+        return <MessagesPage setCurrentPage={setCurrentPage} />;
       case 'marketplace':
         return (
           <MarketplacePage

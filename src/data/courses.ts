@@ -199,5 +199,117 @@ export const coursesData: Course[] = [
         explanation: 'Blossom End Rot is caused by insufficient calcium transport to the rapidly expanding blossom end of the fruit, commonly aggravated by fluctuating irrigation moisture.'
       }
     ]
+  },
+  {
+    id: 'course-avocado-export',
+    title: 'Commercial Hass Avocado Production & GlobalGAP Export Standards',
+    swahiliName: 'Uzalishaji wa Parachichi za Hass na Viwango vya Mauzo ya Nje',
+    level: 'Intermediate',
+    durationHours: 4.0,
+    modulesCount: 3,
+    description: 'Master commercial Hass avocado cultivation in Kenya from rootstock selection, canopy pruning, moisture stress management, to GlobalGAP compliance, dry matter testing, and export packing.',
+    image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=1000&q=80',
+    modules: [
+      {
+        id: 'av1',
+        title: 'Module 1: Orchard Layout, Planting Basins & Soil Drainage',
+        durationMinutes: 60,
+        content: 'Avocado trees are sensitive to Phytophthora root rot in waterlogged soils. Learn how to plant on raised mounds (5x5m or 7x7m spacing), incorporate compost, and maintain soil pH between 5.5 and 6.5.',
+        fieldChecklist: [
+          'Dig planting holes 60x60x60 cm and blend topsoil with 20 kg cured farmyard manure.',
+          'Plant grafted seedlings leaving the graft union at least 15 cm above ground level.',
+          'Mulch heavily around the drip line avoiding contact with the main stem bark.'
+        ]
+      },
+      {
+        id: 'av2',
+        title: 'Module 2: Flowering, Fruit Set & Irrigation Management',
+        durationMinutes: 70,
+        content: 'Understanding Type A flowering behavior, ensuring beehives (2 hives per acre for cross-pollination), preventing fruit drop during dry spells, and foliar Boron and Zinc sprays.',
+        fieldChecklist: [
+          'Introduce bee colonies during 10% flower opening stage to maximize pollination.',
+          'Maintain consistent soil moisture via drip irrigation during fruit set to prevent premature fruit drop.',
+          'Apply micro-nutrient foliar sprays (Zinc and Boron) prior to full bloom.'
+        ]
+      },
+      {
+        id: 'av3',
+        title: 'Module 3: Harvest Maturity, Dry Matter Testing & GlobalGAP Traceability',
+        durationMinutes: 80,
+        content: 'Determining picking maturity using the oven dry matter test (minimum 23% dry matter required by EU standards), clipping stems cleanly without damaging skin, and field traceability records.',
+        fieldChecklist: [
+          'Sample fruits for laboratory dry matter testing to ensure oil content is above 23%.',
+          'Clip stalks cleanly leaving a 2mm pedicel; never twist or pull fruits from branches.',
+          'Maintain complete pesticide spray logs and field chemical store locks for GlobalGAP inspection.'
+        ]
+      }
+    ],
+    quiz: [
+      {
+        question: 'What is the minimum dry matter percentage required for export-grade Hass avocados destined for European markets?',
+        options: ['15%', '18%', '23%', '35%'],
+        correctIndex: 2,
+        explanation: 'European and international import standards require a minimum of 23% dry matter to guarantee uniform ripening and characteristic rich buttery flavor.'
+      }
+    ]
+  },
+  {
+    id: 'course-drip-irrigation',
+    title: 'Precision Drip Irrigation & Solar Pumping Engineering',
+    swahiliName: 'Umwagiliaji wa Matone na Pampu za Jua',
+    level: 'Commercial',
+    durationHours: 3.5,
+    modulesCount: 3,
+    description: 'Design and operate gravity and solar-powered drip irrigation systems for horticulture, including filtration sizing, manifold hydraulics, emitter discharge calibration, and fertigation.',
+    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=1000&q=80',
+    modules: [
+      {
+        id: 'dp1',
+        title: 'Module 1: Hydraulic Sizing, Flow Rate & Pressure Head',
+        durationMinutes: 55,
+        content: 'Calculating total daily crop water requirement (evapotranspiration ETc in mm/day), sizing mainline PVC and sub-main HDPE pipes to maintain 1.0 to 1.5 bar operating pressure throughout lateral lines.',
+        fieldChecklist: [
+          'Calculate peak daily water demand: Crop area (m²) x ETc (mm/day) = Liters needed.',
+          'Verify elevation drop or pump head to guarantee minimum 1.0 bar at furthest emitter.',
+          'Install pressure relief and air release valves at the highest and lowest manifold positions.'
+        ]
+      },
+      {
+        id: 'dp2',
+        title: 'Module 2: Water Filtration & Disc/Screen Maintenance',
+        durationMinutes: 60,
+        content: 'Selecting between 120-mesh disc filters and media sand filters based on water source (borehole vs river), preventing algal clogging, and executing automated or manual backwashing.',
+        fieldChecklist: [
+          'Never run drip lines without a functioning 120-mesh (130-micron) primary filter.',
+          'Flush drip sub-main ends weekly by opening flush valves for 60 seconds.',
+          'Conduct periodic acid or hydrogen peroxide flushes to dissolve calcium carbonate scaling.'
+        ]
+      },
+      {
+        id: 'dp3',
+        title: 'Module 3: Venturi Injectors & Uniform Fertigation',
+        durationMinutes: 65,
+        content: 'Installing a Venturi bypass injector to apply fully water-soluble fertilizers directly into root zones, timing application during the middle third of irrigation cycles.',
+        fieldChecklist: [
+          'Only inject 100% water-soluble fertilizers (e.g. Calcium Nitrate, Potassium Nitrate).',
+          'Irrigate with pure water first, inject fertilizer, and flush lines with clean water to prevent fungal buildup.',
+          'Check Electrical Conductivity (EC) of emitter discharge using a portable EC pen.'
+        ]
+      }
+    ],
+    quiz: [
+      {
+        question: 'When during an irrigation cycle should fertigation (injecting soluble fertilizers through drip lines) take place?',
+        options: [
+          'At the very beginning of the cycle only',
+          'During the middle third of the irrigation cycle, followed by clean water flushing',
+          'At the very end of the cycle right before turning off water',
+          'Only when pipes are dry'
+        ],
+        correctIndex: 1,
+        explanation: 'Fertigation should occur during the middle third of the cycle so root zones are already pre-moistened for optimal nutrient uptake, and the subsequent clean water flush clears all fertilizer residue from lines and emitters.'
+      }
+    ]
   }
 ];
+

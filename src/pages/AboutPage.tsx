@@ -127,20 +127,42 @@ export const AboutPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Advisory & Regulatory Disclaimers (Consolidated from footer) */}
+      <div className="bg-stone-50 rounded-3xl border border-stone-200 p-6 sm:p-8 space-y-3 shadow-xs">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800">
+          <ShieldCheck className="w-4 h-4 text-amber-700" />
+          <span>Agricultural & Veterinary Advisory Standards</span>
+        </div>
+        <p className="text-xs text-stone-600 leading-relaxed">
+          The crop guides, calculators, pest protocols, and AI responses on AgriKnowledge Hub are intended for educational and agronomic decision-support purposes. Grounded in peer-reviewed KALRO manuals and KEPHIS variety releases, they do not replace on-site physical soil or tissue diagnostics by a certified agronomist. Always verify chemical registrations directly with the Pest Control Products Board (PCPB) and consult a registered veterinary officer for acute livestock ailments.
+        </p>
+      </div>
+
+      {/* International Expansion Roadmap */}
+      <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 space-y-3 shadow-xs">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#183D29]">
+          <Globe className="w-4 h-4 text-emerald-700" />
+          <span>Worldwide Agricultural Expansion Roadmap</span>
+        </div>
+        <p className="text-xs text-stone-600 leading-relaxed">
+          While AgriKnowledge Hub has launched with deep Kenyan localization (47 counties, bimodal rainfall, KES benchmarks), its software architecture is engineered for international agricultural scale. Multi-currency support (KES, UGX, TZS, NGN, USD, EUR, GBP), multi-language frameworks, and modular climatic zones enable rapid rollout to East Africa (Uganda, Tanzania, Rwanda), West Africa, and global tropical/subtropical farming communities.
+        </p>
+      </div>
+
       {/* Contact & Support */}
-      <div className="bg-stone-50 border border-stone-200 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xs">
-        <h3 className="text-base font-bold text-stone-900">Contact & Farmer Support Desk</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-stone-700">
+      <div className="bg-[#183D29] text-white rounded-3xl p-6 sm:p-8 space-y-4 shadow-xs">
+        <h3 className="text-base font-bold text-emerald-200">Contact & Farmer Support Desk</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-stone-200">
           <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-emerald-700" />
+            <MapPin className="w-4 h-4 text-emerald-400" />
             <span>Nairobi & Eldoret Desks, Kenya</span>
           </div>
           <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-emerald-700" />
-            <span>contact@agriknowledge.co.ke</span>
+            <Mail className="w-4 h-4 text-emerald-400" />
+            <span>support@agriknowledgehub.com</span>
           </div>
           <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-emerald-700" />
+            <Phone className="w-4 h-4 text-emerald-400" />
             <span>+254 712 345 678</span>
           </div>
         </div>

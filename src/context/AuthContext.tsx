@@ -11,6 +11,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   notifications: NotificationItem[];
   markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  dismissNotification: (id: string) => void;
+  clearAllNotifications: () => void;
 }
 
 export const mockProfiles: Record<UserRole, UserProfile> = {
@@ -236,6 +239,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const markAllNotificationsRead = () => {
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, read: true }));
+      localStorage.setItem('agri_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const dismissNotification = (id: string) => {
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id);
+      localStorage.setItem('agri_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    localStorage.setItem('agri_notifications', JSON.stringify([]));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -248,6 +272,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: role !== 'guest',
         notifications,
         markNotificationRead,
+        markAllNotificationsRead,
+        dismissNotification,
+        clearAllNotifications,
       }}
     >
       {children}
