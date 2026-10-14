@@ -1,10 +1,15 @@
 import React from 'react';
 import { CalculatorsSuite } from '../components/CalculatorsSuite';
 
-export const CalculatorsPage: React.FC = () => {
+interface CalculatorsPageProps {
+  onBack?: () => void;
+  initialCalcId?: number;
+}
+
+export const CalculatorsPage: React.FC<CalculatorsPageProps> = ({ onBack, initialCalcId }) => {
   return (
     <div className="pb-12">
-      <CalculatorsSuite />
+      <CalculatorsSuite onBack={onBack} initialCalcId={initialCalcId} />
     </div>
   );
 };

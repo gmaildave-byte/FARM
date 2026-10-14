@@ -123,8 +123,8 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
   const handleDownloadReceipt = () => {
     if (!completedTx) return;
     const receiptText = `=========================================
-AGRIKNOWLEDGE HUB — OFFICIAL RECEIPT
-Trusted Agricultural Knowledge. Stronger Farming. Better Markets.
+AGRIHUB — OFFICIAL RECEIPT
+Grow Knowledge. Share Progress. Build the Future.
 Founded & Developed by Adams Kipkoech Kering
 =========================================
 Receipt Number: ${completedTx.mpesaReceipt || completedTx.transactionRef}
@@ -138,8 +138,8 @@ Status:         COMPLETED (VERIFIED)
 =========================================
 TOTAL PAID:     KES ${completedTx.amountKES.toLocaleString()}
 =========================================
-Thank you for supporting sustainable farming in Kenya!
-Questions? Email: support@agriknowledge.co.ke
+Thank you for supporting sustainable farming in Kenya and worldwide!
+Questions? Email: support@agrihub.app
 `;
     const blob = new Blob([receiptText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -197,7 +197,7 @@ Questions? Email: support@agriknowledge.co.ke
                       {targetTitle || title}
                     </h4>
                     <p className="text-xs text-stone-600">
-                      AgriKnowledge Hub Services
+                      AgriHub Services
                     </p>
                   </div>
                   <div className="text-right shrink-0">

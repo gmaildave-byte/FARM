@@ -101,7 +101,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `agriknowledge_profile_${user?.username || 'user'}.json`;
+    a.download = `agrihub_profile_${user?.username || 'user'}.json`;
     a.click();
     showToast('Personal data archive downloaded.');
   };
@@ -611,7 +611,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           currentUser={{
             id: user?.id || 'user-current',
             name: user?.name || 'Adams Kipkoech Kering',
-            email: user?.email || 'adams@agriknowledge.co.ke',
+            email: user?.email || 'adams.kering@agrihub.app',
             county: user?.county || 'Uasin Gishu',
           }}
           onApplicationSubmitted={(app) => {

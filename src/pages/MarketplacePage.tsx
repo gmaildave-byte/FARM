@@ -143,7 +143,7 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
     const created: MarketplaceListing = {
       id: `mkt-${Date.now()}`,
       title: newTitle.trim(),
-      description: newDescription.trim() || 'Quality agricultural product listed on AgriKnowledge Hub.',
+      description: newDescription.trim() || 'Quality agricultural product listed on AgriHub.',
       category: newCategory,
       priceKES: Number(newPrice),
       isNegotiable: newIsNegotiable,
@@ -543,7 +543,7 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
                             const cleanPhone = (item.sellerPhone || '+254700000000').replace(/[^0-9]/g, '');
                             window.open(
                               `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(
-                                `Hello ${item.sellerName}, I am inquiring about your listing "${item.title}" on AgriKnowledge Hub.`
+                                `Hello ${item.sellerName}, I am inquiring about your listing "${item.title}" on AgriHub.`
                               )}`,
                               '_blank'
                             );
@@ -798,7 +798,7 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
                 <textarea
                   value={reportDetails}
                   onChange={(e) => setReportDetails(e.target.value)}
-                  placeholder="Explain why this listing violates AgriKnowledge Hub Marketplace Guidelines..."
+                  placeholder="Explain why this listing violates AgriHub Marketplace Guidelines..."
                   rows={3}
                   required
                   className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-2 focus:ring-[#183D29]"

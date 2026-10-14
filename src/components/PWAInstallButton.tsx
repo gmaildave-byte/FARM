@@ -45,7 +45,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             className ||
             'bg-amber-400 hover:bg-amber-300 text-stone-950 border border-amber-300'
           }`}
-          title="Install AgriKnowledge Hub App on your device"
+          title="Install AgriHub App on your device"
         >
           <Download className="w-3.5 h-3.5 stroke-[2.5]" />
           <span>Install App</span>
@@ -65,7 +65,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               <Download className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div className="text-left">
-              <div className="font-bold text-stone-900">Install AgriKnowledge Hub</div>
+              <div className="font-bold text-stone-900">Install AgriHub</div>
               <div className="text-[11px] text-stone-500 font-normal">Fast, offline-friendly farming app</div>
             </div>
           </div>
@@ -91,7 +91,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
           <div className="flex items-center gap-2 overflow-hidden">
             <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
             <span className="truncate">
-              Install <strong>AgriKnowledge Hub</strong> on your phone for instant offline crop guides & calculators.
+              Install <strong>AgriHub</strong> on your phone for instant offline crop guides & calculators.
             </span>
           </div>
           <button
@@ -150,7 +150,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                   3
                 </div>
                 <div>
-                  Tap <strong>Add</strong> in the top right corner. AgriKnowledge Hub will launch like an app!
+                  Tap <strong>Add</strong> in the top right corner. AgriHub will launch like an app!
                 </div>
               </div>
             </div>
@@ -175,7 +175,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                   <Download className="w-5 h-5 text-emerald-300" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm font-serif">Install AgriKnowledge Hub</h3>
+                  <h3 className="font-bold text-sm font-serif">Install AgriHub</h3>
                   <p className="text-[11px] text-stone-500">Progressive Web Application</p>
                 </div>
               </div>
@@ -189,7 +189,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 
             <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-2 text-xs text-stone-700 leading-relaxed">
               <p>
-                To install AgriKnowledge Hub on your device:
+                To install AgriHub on your device:
               </p>
               <ul className="list-disc list-inside space-y-1.5 pl-1 text-stone-800">
                 <li><strong>Chrome / Edge:</strong> Click the install icon (computer with down arrow) in your browser address bar, or open the browser menu (⋮) and tap <strong>Install App</strong> or <strong>Add to Home screen</strong>.</li>

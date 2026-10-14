@@ -33,14 +33,14 @@ export const AiAssistantPage: React.FC<AiAssistantPageProps> = ({ selectedCounty
       id: 'welcome-1',
       sender: 'assistant',
       text: language === 'sw'
-        ? `Habari! Mimi ni msaidizi wako wa akili bandia (AI Agronomist) wa AgriKnowledge Hub. Nimeelimishwa kwa miongozo ya utafiti ya KALRO, KEPHIS na Wizara ya Kilimo ya Kenya. 
+        ? `Habari! Mimi ni msaidizi wako wa akili bandia (AI Agronomist) wa AgriHub. Nimeelimishwa kwa miongozo ya utafiti ya KALRO, KEPHIS na Wizara ya Kilimo ya Kenya. 
 
 Unaweza kuniuliza kuhusu:
 - Utambuzi wa magonjwa ya mazao na wadudu
 - Ratiba sahihi ya mbolea na mbegu zilizoidhinishwa
 - Mbinu bora za ufugaji wa ng'ombe wa maziwa au kuku
 - Mbinu za kukabiliana na ukame au hali ya hewa katika kaunti yako ya **${selectedCounty}**.`
-        : `Welcome! I am the AgriKnowledge AI Agronomist & Farming Advisor. My knowledge base is grounded in official production manuals from KALRO, KEPHIS, and the Kenya Ministry of Agriculture.
+        : `Welcome! I am the AgriHub AI Agronomist & Farming Advisor. My knowledge base is grounded in official production manuals from KALRO, KEPHIS, and the Kenya Ministry of Agriculture.
 
 Feel free to ask me about:
 - Crop disease diagnostics & pest management
@@ -100,7 +100,7 @@ Feel free to ask me about:
         sender: 'assistant',
         text: data.answer || 'No response generated.',
         isFallback: Boolean(data.isFallback),
-        source: data.source || 'AgriKnowledge Hub Agronomy Engine',
+        source: data.source || 'AgriHub Agronomy Engine',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -110,9 +110,9 @@ Feel free to ask me about:
       const fallbackMsg: ChatMessage = {
         id: `ai-err-${Date.now()}`,
         sender: 'assistant',
-        text: `### Expert Advisory — AgriKnowledge Hub\n\nThank you for your question. For ${selectedCounty} County, ensure you test your soil pH, plant certified KEPHIS seed (e.g. H614 or Kilele F1), apply balanced fertilizer (DAP at planting and CAN at knee-high), and inspect fields weekly for pests like Fall Armyworm.\n\n*Consult your local sub-county agricultural extension officer for on-farm verification.*`,
+        text: `### Expert Advisory — AgriHub\n\nThank you for your question. For ${selectedCounty} County, ensure you test your soil pH, plant certified KEPHIS seed (e.g. H614 or Kilele F1), apply balanced fertilizer (DAP at planting and CAN at knee-high), and inspect fields weekly for pests like Fall Armyworm.\n\n*Consult your local sub-county agricultural extension officer for on-farm verification.*`,
         isFallback: true,
-        source: 'AgriKnowledge Hub Knowledge Engine (Offline Mode)',
+        source: 'AgriHub Knowledge Engine (Offline Mode)',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, fallbackMsg]);
@@ -187,7 +187,7 @@ Feel free to ask me about:
                 {/* Footer Source info */}
                 {msg.sender === 'assistant' && (
                   <div className="mt-3 pt-2 border-t border-stone-200/80 flex flex-wrap justify-between items-center text-[10px] text-stone-500 gap-1">
-                    <span>Source: {msg.source || 'AgriKnowledge AI Engine'}</span>
+                    <span>Source: {msg.source || 'AgriHub AI Engine'}</span>
                     <span>{msg.timestamp}</span>
                   </div>
                 )}

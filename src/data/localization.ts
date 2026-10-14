@@ -3,8 +3,8 @@ export type Language = 'en' | 'sw';
 export const translations = {
   en: {
     // Brand
-    brandName: 'AgriKnowledge Hub',
-    tagline: 'Trusted Agricultural Knowledge. Stronger Farming. Better Markets.',
+    brandName: 'AgriHub',
+    tagline: 'Grow Knowledge. Share Progress. Build the Future.',
     founder: 'Adams Kipkoech Kering',
     founderAttribution: 'Founded and developed by Adams Kipkoech Kering',
     countryTarget: 'Kenya',
@@ -30,7 +30,7 @@ export const translations = {
       opportunities: 'Jobs & Grants',
       farmBusiness: 'Farm Business',
       adminCms: 'Admin & Moderation',
-      about: 'About AgriKnowledge Hub',
+      about: 'About AgriHub',
       searchPlaceholder: 'Search crops, animals, pests, tools, prices...',
       signIn: 'Sign In',
       signOut: 'Sign Out',
@@ -83,14 +83,14 @@ export const translations = {
 
     // Disclaimers
     disclaimer: {
-      general: 'Information on AgriKnowledge Hub is compiled from authoritative sources including KALRO, KEPHIS, and the Kenya Ministry of Agriculture. For emergency animal health or crop disease issues, consult a certified local agronomist or veterinary surgeon.',
+      general: 'Information on AgriHub is compiled from authoritative sources including KALRO, KEPHIS, and the Kenya Ministry of Agriculture. For emergency animal health or crop disease issues, consult a certified local agronomist or veterinary surgeon.',
     },
   },
 
   sw: {
     // Brand
-    brandName: 'AgriKnowledge Hub',
-    tagline: 'Ujuzi wa Kilimo wa Kuaminika. Kilimo Imara. Masoko Bora.',
+    brandName: 'AgriHub',
+    tagline: 'Kua na Maarifa. Shiriki Maendeleo. Jenga Baadaye.',
     founder: 'Adams Kipkoech Kering',
     founderAttribution: 'Iliyoanzishwa na kuendelezwa na Adams Kipkoech Kering',
     countryTarget: 'Kenya',
@@ -116,7 +116,7 @@ export const translations = {
       opportunities: 'Kazi na Ruzuku',
       farmBusiness: 'Biashara ya Kilimo',
       adminCms: 'Usimamizi wa Mfumo',
-      about: 'Kuhusu AgriKnowledge Hub',
+      about: 'Kuhusu AgriHub',
       searchPlaceholder: 'Tafuta mazao, wanyama, magonjwa, vikokotoo...',
       signIn: 'Ingia',
       signOut: 'Ondoka',

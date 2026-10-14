@@ -74,7 +74,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-800/80 border border-emerald-600/50 text-[11px] font-semibold text-emerald-200">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                <span>AgriKnowledge Hub Seller Services</span>
+                <span>AgriHub Seller Services</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold tracking-tight font-serif">
                 Grow Your Agribusiness in Kenya

@@ -337,7 +337,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ setCurrentPage }) =>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  window.open(`https://api.whatsapp.com/send?text=Hello%20from%20AgriKnowledge%20Hub`, '_blank');
+                  window.open(`https://api.whatsapp.com/send?text=Hello%20from%20AgriHub`, '_blank');
                 }}
                 className="px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition"
                 title="Connect via WhatsApp"

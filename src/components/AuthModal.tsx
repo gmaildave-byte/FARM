@@ -187,7 +187,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      login('adams@agriknowledgehub.com', 'Adams Kipkoech Kering', 'admin');
+                      login('adams.kering@agrihub.app', 'Adams Kipkoech Kering', 'admin');
                       onClose();
                     }}
                     className="p-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl border border-emerald-200 text-xs transition"

@@ -34,10 +34,10 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
   if (!isOpen) return null;
 
   // Build canonical post URL
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://agriknowledge.co.ke';
-  const canonicalUrl = `${origin}/#post-${post.id}`;
-  const shareTitle = post.title || `Farming update by ${post.authorName} on AgriKnowledge Hub`;
-  const shareMessage = `See this farming update on AgriKnowledge Hub: ${canonicalUrl}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://agrihub.app';
+  const canonicalUrl = `${origin}/#community?post=${post.id}`;
+  const shareTitle = post.title || `Farming update by ${post.authorName} on AgriHub`;
+  const shareMessage = `See this agricultural update on AgriHub: ${canonicalUrl}\nGrow Knowledge. Share Progress. Build the Future.`;
 
   const showFeedback = (msg: string) => {
     setFeedbackMessage(msg);
@@ -72,12 +72,17 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
     showFeedback('Opened WhatsApp to share post.');
   };
 
+  const handleShareSMS = () => {
+    const smsUrl = `sms:?body=${encodeURIComponent(shareMessage)}`;
+    window.location.href = smsUrl;
+  };
+
   const handleShareNative = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: shareTitle,
-          text: `See this farming update from ${post.authorName} on AgriKnowledge Hub`,
+          text: `See this farming update from ${post.authorName} on AgriHub`,
           url: canonicalUrl,
         });
         showFeedback('Shared successfully via device options.');
@@ -103,7 +108,7 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
 
   const handleShareEmail = () => {
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(
-      `Hello,\n\nI thought you might find this agricultural update interesting:\n\n${shareMessage}\n\nAgriKnowledge Hub — Trusted Agricultural Knowledge. Stronger Farming. Better Markets.`
+      `Hello,\n\nI thought you might find this agricultural update interesting:\n\n${shareMessage}\n\nAgriHub — Grow Knowledge. Share Progress. Build the Future.`
     )}`;
     window.location.href = mailtoUrl;
   };
@@ -250,6 +255,24 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
               </div>
             </button>
 
+            {/* SMS */}
+            <button
+              onClick={handleShareSMS}
+              className="flex items-center gap-3 p-3.5 rounded-2xl bg-white border border-stone-200/90 hover:border-emerald-500 hover:bg-emerald-50/30 transition text-left group shadow-2xs"
+            >
+              <div className="w-9 h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-bold text-stone-900 text-xs">
+                  SMS Text
+                </div>
+                <div className="text-[10px] text-stone-500">
+                  Send to farmer phone
+                </div>
+              </div>
+            </button>
+
             {/* Facebook */}
             <button
               onClick={handleShareFacebook}
@@ -263,7 +286,7 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
                   Facebook
                 </div>
                 <div className="text-[10px] text-stone-500">
-                  Farmer groups
+                  Post on feed
                 </div>
               </div>
             </button>

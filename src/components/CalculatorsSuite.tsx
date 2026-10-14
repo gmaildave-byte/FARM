@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Calculator,
   Compass,
@@ -15,15 +15,35 @@ import {
   HelpCircle,
   CheckCircle2,
   Layers,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-export const CalculatorsSuite: React.FC = () => {
+export interface CalculatorsSuiteProps {
+  initialCalcId?: number;
+  onBack?: () => void;
+}
+
+export const CalculatorsSuite: React.FC<CalculatorsSuiteProps> = ({
+  initialCalcId,
+  onBack,
+}) => {
   const { t, language } = useLanguage();
-  const [selectedCalcId, setSelectedCalcId] = useState<number>(1);
+  const [selectedCalcId, setSelectedCalcId] = useState<number>(initialCalcId || 1);
+  const [mobileView, setMobileView] = useState<'directory' | 'workspace'>(
+    initialCalcId ? 'workspace' : 'workspace'
+  );
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
+  const workspaceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialCalcId && initialCalcId >= 1 && initialCalcId <= 26) {
+      setSelectedCalcId(initialCalcId);
+      setMobileView('workspace');
+    }
+  }, [initialCalcId]);
 
   // 1. Land Area Converter
   const [c1Area, setC1Area] = useState<number>(2.5);
@@ -203,8 +223,59 @@ export const CalculatorsSuite: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Filter Pills & Search */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+      {/* Mobile Top Navigation & Quick Switcher (Visible on mobile/tablet) */}
+      <div className="lg:hidden flex flex-col gap-2.5 bg-emerald-50/80 border border-emerald-200/90 p-3.5 rounded-2xl shadow-2xs">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            onClick={() => setMobileView(mobileView === 'directory' ? 'workspace' : 'directory')}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#183D29] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
+          >
+            {mobileView === 'directory' ? (
+              <>
+                <Calculator className="w-3.5 h-3.5" />
+                <span>Open Calculator #{selectedCalc.id}</span>
+              </>
+            ) : (
+              <>
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Browse All 26 Tools</span>
+              </>
+            )}
+          </button>
+
+          <span className="text-[11px] font-bold text-emerald-950 font-serif">
+            Tool #{selectedCalc.id} of 26
+          </span>
+        </div>
+
+        {/* Quick Calculator Dropdown for Instant Jumping on Mobile */}
+        <div className="pt-1">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-emerald-900 mb-1">
+            Jump Directly to Tool:
+          </label>
+          <select
+            value={selectedCalcId}
+            onChange={(e) => {
+              const id = Number(e.target.value);
+              setSelectedCalcId(id);
+              setMobileView('workspace');
+              requestAnimationFrame(() => {
+                workspaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              });
+            }}
+            className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#183D29]"
+          >
+            {calculatorsList.map((c) => (
+              <option key={c.id} value={c.id}>
+                #{c.id} — {c.name} ({c.category})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Category Filter Pills & Search (Visible in Directory mode or Desktop) */}
+      <div className={`${mobileView === 'workspace' ? 'hidden lg:flex' : 'flex'} flex-col sm:flex-row gap-4 justify-between items-start sm:items-center`}>
         <div className="flex flex-wrap gap-2">
           {[
             { id: 'all', label: 'All 26 Tools' },
@@ -240,13 +311,19 @@ export const CalculatorsSuite: React.FC = () => {
       </div>
 
       {/* Main Grid: Left Selector List, Right Interactive Calculator */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: Calculators Directory (4 cols) */}
-        <div className="lg:col-span-4 space-y-2 max-h-[700px] overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left: Calculators Directory (4 cols, hidden on mobile if workspace is active) */}
+        <div className={`lg:col-span-4 space-y-2 max-h-[700px] overflow-y-auto pr-1 ${mobileView === 'workspace' ? 'hidden lg:block' : 'block'}`}>
           {filteredCalcs.map(calc => (
             <button
               key={calc.id}
-              onClick={() => setSelectedCalcId(calc.id)}
+              onClick={() => {
+                setSelectedCalcId(calc.id);
+                setMobileView('workspace');
+                requestAnimationFrame(() => {
+                  workspaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+              }}
               className={`w-full text-left p-3.5 rounded-xl border transition-all ${
                 selectedCalcId === calc.id
                   ? 'border-emerald-600 bg-emerald-50/70 shadow-sm'
@@ -273,13 +350,29 @@ export const CalculatorsSuite: React.FC = () => {
           )}
         </div>
 
-        {/* Right: Active Calculator Workspace (8 cols) */}
-        <div className="lg:col-span-8 bg-white rounded-2xl border border-stone-200 shadow-sm p-6 sm:p-8">
+        {/* Right: Active Calculator Workspace (8 cols, hidden on mobile if directory is active) */}
+        <div
+          ref={workspaceRef}
+          className={`lg:col-span-8 bg-white rounded-2xl border border-stone-200 shadow-sm p-6 sm:p-8 scroll-mt-24 ${
+            mobileView === 'directory' ? 'hidden lg:block' : 'block'
+          }`}
+        >
           <div className="border-b border-stone-100 pb-4 mb-6">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-700 mb-1">
-              <span>Calculator #{selectedCalc.id}</span>
-              <span>•</span>
-              <span className="capitalize">{selectedCalc.category}</span>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-700 mb-1">
+                <span>Calculator #{selectedCalc.id}</span>
+                <span>•</span>
+                <span className="capitalize">{selectedCalc.category}</span>
+              </div>
+
+              {/* Mobile Back Button directly inside the card header */}
+              <button
+                onClick={() => setMobileView('directory')}
+                className="lg:hidden text-xs text-emerald-800 hover:text-emerald-950 font-bold flex items-center gap-1"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>All Tools</span>
+              </button>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-stone-900">{selectedCalc.name}</h2>
             <p className="text-sm text-stone-700 mt-1">{selectedCalc.desc}</p>

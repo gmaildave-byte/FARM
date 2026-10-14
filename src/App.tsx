@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { FarmProvider } from './context/FarmContext';
@@ -37,32 +37,179 @@ import { CreateActionModal } from './components/CreateActionModal';
 import type { Page } from './types';
 import { ArrowLeft } from 'lucide-react';
 
+const VALID_PAGES: Page[] = [
+  'home',
+  'explore',
+  'crops',
+  'crop-detail',
+  'livestock',
+  'soil-water',
+  'pests',
+  'weather',
+  'farm-manager',
+  'calculators',
+  'markets',
+  'marketplace',
+  'marketplace-create',
+  'social-feed',
+  'community',
+  'reels',
+  'profile',
+  'messages',
+  'notifications',
+  'suppliers',
+  'sustainable',
+  'learning',
+  'expert',
+  'ai-assistant',
+  'opportunities',
+  'farm-business',
+  'admin-cms',
+  'about',
+  'events',
+  'discover',
+  'legal',
+];
+
+const parsePageFromHash = (hash: string): Page => {
+  if (!hash) return 'home';
+  const clean = hash.replace(/^#\/?/, '').split('?')[0].split('/')[0];
+  if (clean.startsWith('reel-')) return 'reels';
+  if (clean === 'reels') return 'reels';
+  if (VALID_PAGES.includes(clean as Page)) {
+    return clean as Page;
+  }
+  return 'home';
+};
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const scrollMapRef = useRef<Record<string, number>>({});
+
+  const [currentPage, setCurrentPage] = useState<Page>(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      return parsePageFromHash(window.location.hash);
+    }
+    return 'home';
+  });
+
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedCounty, setSelectedCounty] = useState<string>('Uasin Gishu');
 
-  const handleCreateSelect = (action: 'post' | 'listing' | 'ask' | 'verify') => {
-    setCreateModalOpen(false);
-    if (action === 'post') {
-      setCurrentPage('community');
-    } else if (action === 'listing') {
-      setCurrentPage('marketplace');
-    } else if (action === 'ask') {
-      setCurrentPage('expert');
-    } else if (action === 'verify') {
-      setCurrentPage('profile');
+  // Navigate to target page and maintain browser history stack
+  const navigate = (nextPage: Page, options?: { replace?: boolean }) => {
+    // Record scroll position for current page before leaving
+    if (typeof window !== 'undefined') {
+      scrollMapRef.current[currentPage] = window.scrollY;
+    }
+
+    if (nextPage === currentPage) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const newHash = '#' + nextPage;
+    if (options?.replace) {
+      window.history.replaceState({ page: nextPage }, '', newHash);
+    } else {
+      window.history.pushState({ page: nextPage }, '', newHash);
+    }
+
+    setCurrentPage(nextPage);
+
+    // If restoring previous scroll position for target page
+    const savedScrollY = scrollMapRef.current[nextPage] || 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
+    });
+  };
+
+  // Safe backward navigation
+  const goBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate('home');
     }
   };
 
-  // Instant scroll to top on page change so user is immediately where they need to be
+  // Open modal with back-dismiss capability
+  const handleOpenSearchModal = () => {
+    try {
+      window.history.pushState({ modal: 'search', page: currentPage }, '', window.location.hash);
+    } catch {}
+    setSearchModalOpen(true);
+  };
+
+  const handleCloseSearchModal = () => {
+    setSearchModalOpen(false);
+    if (window.history.state?.modal === 'search') {
+      window.history.back();
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    try {
+      window.history.pushState({ modal: 'create', page: currentPage }, '', window.location.hash);
+    } catch {}
+    setCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setCreateModalOpen(false);
+    if (window.history.state?.modal === 'create') {
+      window.history.back();
+    }
+  };
+
+  const handleCreateSelect = (action: 'post' | 'listing' | 'ask' | 'verify') => {
+    setCreateModalOpen(false);
+    if (action === 'post') {
+      navigate('community');
+    } else if (action === 'listing') {
+      navigate('marketplace');
+    } else if (action === 'ask') {
+      navigate('expert');
+    } else if (action === 'verify') {
+      navigate('profile');
+    }
+  };
+
+  // Listen for browser Back/Forward (popstate)
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [currentPage]);
+    // Ensure initial history state is set with { page: currentPage }
+    if (!window.history.state?.page) {
+      window.history.replaceState({ page: currentPage }, '', window.location.hash || '#home');
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      // 1. If an active modal is open, dismiss it first
+      if (searchModalOpen) {
+        setSearchModalOpen(false);
+        return;
+      }
+      if (createModalOpen) {
+        setCreateModalOpen(false);
+        return;
+      }
+
+      // 2. Otherwise route to the popped page
+      const targetPage = event.state?.page || parsePageFromHash(window.location.hash);
+      setCurrentPage(targetPage);
+
+      const savedScrollY = scrollMapRef.current[targetPage] || 0;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
+      });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [searchModalOpen, createModalOpen, currentPage]);
 
   const handleSelectSearchResult = (page: Page) => {
-    setCurrentPage(page);
+    setSearchModalOpen(false);
+    navigate(page);
   };
 
   const renderCurrentContent = (isMobile = false) => {
@@ -70,24 +217,34 @@ export default function App() {
       case 'home':
         return (
           <HomePage
-            setCurrentPage={setCurrentPage}
-            openSearchModal={() => setSearchModalOpen(true)}
+            setCurrentPage={navigate}
+            openSearchModal={handleOpenSearchModal}
             selectedCounty={selectedCounty}
           />
         );
+      case 'reels':
+        return (
+          <CommunityPage
+            isMobileFrame={isMobile}
+            initialMode="reels"
+            onNavigateToProfile={() => navigate('profile')}
+          />
+        );
+      case 'social-feed':
       case 'community':
         return (
           <CommunityPage
             isMobileFrame={isMobile}
-            onNavigateToProfile={() => setCurrentPage('profile')}
+            initialMode="feed"
+            onNavigateToProfile={() => navigate('profile')}
           />
         );
       case 'messages':
-        return <MessagesPage setCurrentPage={setCurrentPage} />;
+        return <MessagesPage setCurrentPage={navigate} />;
       case 'marketplace':
         return (
           <MarketplacePage
-            onSelectSellerProfile={() => setCurrentPage('profile')}
+            onSelectSellerProfile={() => navigate('profile')}
           />
         );
       case 'events':
@@ -99,10 +256,10 @@ export default function App() {
           <div className="space-y-4">
             {isMobile && (
               <button
-                onClick={() => setCurrentPage('home')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 px-3 py-1.5 rounded-full"
+                onClick={goBack}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 hover:bg-[#183D29]/20 px-3 py-1.5 rounded-full transition"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
             )}
             <CropsPage />
@@ -113,10 +270,10 @@ export default function App() {
           <div className="space-y-4">
             {isMobile && (
               <button
-                onClick={() => setCurrentPage('home')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 px-3 py-1.5 rounded-full"
+                onClick={goBack}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 hover:bg-[#183D29]/20 px-3 py-1.5 rounded-full transition"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
             )}
             <LivestockPage />
@@ -127,13 +284,13 @@ export default function App() {
           <div className="space-y-4">
             {isMobile && (
               <button
-                onClick={() => setCurrentPage('home')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 px-3 py-1.5 rounded-full"
+                onClick={goBack}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 hover:bg-[#183D29]/20 px-3 py-1.5 rounded-full transition"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
             )}
-            <SoilWaterPage setCurrentPage={setCurrentPage} />
+            <SoilWaterPage setCurrentPage={navigate} />
           </div>
         );
       case 'pests':
@@ -141,10 +298,10 @@ export default function App() {
           <div className="space-y-4">
             {isMobile && (
               <button
-                onClick={() => setCurrentPage('home')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 px-3 py-1.5 rounded-full"
+                onClick={goBack}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 hover:bg-[#183D29]/20 px-3 py-1.5 rounded-full transition"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
             )}
             <PestsPage />
@@ -155,10 +312,10 @@ export default function App() {
           <div className="space-y-4">
             {isMobile && (
               <button
-                onClick={() => setCurrentPage('home')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 px-3 py-1.5 rounded-full"
+                onClick={goBack}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 hover:bg-[#183D29]/20 px-3 py-1.5 rounded-full transition"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
             )}
             <WeatherPage
@@ -172,13 +329,13 @@ export default function App() {
           <div className="space-y-4">
             {isMobile && (
               <button
-                onClick={() => setCurrentPage('home')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 px-3 py-1.5 rounded-full"
+                onClick={goBack}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#183D29] bg-[#183D29]/10 hover:bg-[#183D29]/20 px-3 py-1.5 rounded-full transition"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
             )}
-            <CalculatorsPage />
+            <CalculatorsPage onBack={goBack} />
           </div>
         );
       case 'markets':
@@ -206,8 +363,8 @@ export default function App() {
       case 'discover':
         return (
           <DiscoverPage
-            setCurrentPage={setCurrentPage}
-            openSearchModal={() => setSearchModalOpen(true)}
+            setCurrentPage={navigate}
+            openSearchModal={handleOpenSearchModal}
             selectedCounty={selectedCounty}
           />
         );
@@ -216,8 +373,8 @@ export default function App() {
       default:
         return (
           <HomePage
-            setCurrentPage={setCurrentPage}
-            openSearchModal={() => setSearchModalOpen(true)}
+            setCurrentPage={navigate}
+            openSearchModal={handleOpenSearchModal}
             selectedCounty={selectedCounty}
           />
         );
@@ -229,12 +386,12 @@ export default function App() {
       <AuthProvider>
         <FarmProvider>
           <div className="min-h-screen bg-[#F4F1EA] text-stone-900 font-sans flex flex-col selection:bg-emerald-200 selection:text-emerald-950 w-full overflow-x-hidden">
-            {/* Main Full-Width Responsive Website Experience */}
+            {/* Main Responsive Experience */}
             <div className="flex-1 flex flex-col w-full min-w-0">
               <Navbar
                 currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
-                openSearchModal={() => setSearchModalOpen(true)}
+                setCurrentPage={navigate}
+                openSearchModal={handleOpenSearchModal}
                 selectedCounty={selectedCounty}
                 setSelectedCounty={setSelectedCounty}
               />
@@ -243,27 +400,27 @@ export default function App() {
                 {renderCurrentContent(false)}
               </main>
 
-              <Footer setCurrentPage={setCurrentPage} />
+              <Footer setCurrentPage={navigate} />
             </div>
 
-            {/* Native Mobile Bottom Navigation for all mobile phones (<768px) */}
+            {/* Native Mobile Bottom Navigation */}
             <MobileBottomNav
               currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              onCreateClick={() => setCreateModalOpen(true)}
+              setCurrentPage={navigate}
+              onCreateClick={handleOpenCreateModal}
             />
 
             {/* Global Search Modal */}
             <GlobalSearchModal
               isOpen={searchModalOpen}
-              onClose={() => setSearchModalOpen(false)}
+              onClose={handleCloseSearchModal}
               onSelectResult={handleSelectSearchResult}
             />
 
             {/* Mobile Create Action Modal */}
             <CreateActionModal
               isOpen={createModalOpen}
-              onClose={() => setCreateModalOpen(false)}
+              onClose={handleCloseCreateModal}
               onSelectAction={handleCreateSelect}
             />
           </div>

@@ -84,7 +84,7 @@ export const LegalPage: React.FC = () => {
                 Terms of Service
               </h2>
               <p className="text-xs text-stone-500 mt-1">
-                Last reviewed: October 2026 • AgriKnowledge Hub
+                Last reviewed: October 2026 • AgriHub
               </p>
             </div>
 
@@ -93,7 +93,7 @@ export const LegalPage: React.FC = () => {
                 1. Platform Ownership & Attribution
               </h3>
               <p>
-                AgriKnowledge Hub was founded and developed by <strong>Adams Kipkoech Kering</strong> to provide reliable agricultural knowledge, farming community networking, and agricultural trade linkage across Kenya and the East African region.
+                AgriHub was founded and developed by <strong>Adams Kipkoech Kering</strong> to provide reliable agricultural knowledge, farming community networking, and agricultural trade linkage across Kenya and the East African region.
               </p>
             </section>
 
@@ -207,7 +207,7 @@ export const LegalPage: React.FC = () => {
                 1. Agricultural Focus
               </h3>
               <p>
-                AgriKnowledge Hub is an agriculture-only community. Posts, updates, and photos should focus on crop production, animal husbandry, agro-processing, farm machinery, weather, and agricultural economics.
+                AgriHub is an agriculture-only community. Posts, updates, and photos should focus on crop production, animal husbandry, agro-processing, farm machinery, weather, and agricultural economics.
               </p>
             </section>
 
@@ -227,7 +227,7 @@ export const LegalPage: React.FC = () => {
       <div className="bg-[#FAF7F0] border border-stone-200 rounded-3xl p-6 text-xs text-stone-600 flex items-center gap-3">
         <Code className="w-5 h-5 text-emerald-800 shrink-0" />
         <div>
-          <strong>Founder & Developer Notice:</strong> AgriKnowledge Hub is founded and developed by <strong>Adams Kipkoech Kering</strong>. For legal, data protection, or enterprise partnership inquiries, contact <code>legal@agriknowledge.co.ke</code>.
+          <strong>Founder & Developer Notice:</strong> AgriHub is founded and developed by <strong>Adams Kipkoech Kering</strong>. For legal, data protection, or enterprise partnership inquiries, contact <code>legal@agrihub.app</code>.
         </div>
       </div>
     </div>

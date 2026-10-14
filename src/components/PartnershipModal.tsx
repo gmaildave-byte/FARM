@@ -51,7 +51,7 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({
                 Institutional & Business Partnerships
               </h3>
               <p className="text-[11px] text-emerald-200/80">
-                Partner with AgriKnowledge Hub
+                Partner with AgriHub
               </p>
             </div>
           </div>

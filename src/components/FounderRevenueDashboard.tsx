@@ -97,7 +97,7 @@ export const FounderRevenueDashboard: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `agriknowledge_revenue_ledger_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `agrihub_revenue_ledger_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     showToast('Exported transaction ledger CSV.');
   };

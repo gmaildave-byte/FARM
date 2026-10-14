@@ -34,11 +34,13 @@ import { AgriReelsFeed } from '../components/AgriReelsFeed';
 interface CommunityPageProps {
   isMobileFrame?: boolean;
   onNavigateToProfile?: (username: string) => void;
+  initialMode?: 'feed' | 'reels';
 }
 
 export const CommunityPage: React.FC<CommunityPageProps> = ({
   isMobileFrame = false,
   onNavigateToProfile,
+  initialMode = 'feed',
 }) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<ForumPost[]>(forumPostsData);
@@ -51,7 +53,13 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
   });
 
   // Mode: discussions vs reels
-  const [communityMode, setCommunityMode] = useState<'feed' | 'reels'>('feed');
+  const [communityMode, setCommunityMode] = useState<'feed' | 'reels'>(initialMode);
+
+  React.useEffect(() => {
+    if (initialMode) {
+      setCommunityMode(initialMode);
+    }
+  }, [initialMode]);
 
   // Feed tabs: latest, following, relevant, saved
   const [activeFeedTab, setActiveFeedTab] = useState<'latest' | 'following' | 'relevant' | 'saved'>('latest');
