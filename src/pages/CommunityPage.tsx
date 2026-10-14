@@ -23,7 +23,7 @@ import {
   Play
 } from 'lucide-react';
 import { forumPostsData } from '../data/forum';
-import { ForumPost, ReportItem } from '../types';
+import { ForumPost, ReportItem, Page } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { kenyanCounties } from '../components/Navbar';
 import { ShareSheetModal } from '../components/ShareSheetModal';
@@ -35,12 +35,14 @@ interface CommunityPageProps {
   isMobileFrame?: boolean;
   onNavigateToProfile?: (username: string) => void;
   initialMode?: 'feed' | 'reels';
+  onNavigateToPage?: (page: Page, toolId?: number) => void;
 }
 
 export const CommunityPage: React.FC<CommunityPageProps> = ({
   isMobileFrame = false,
   onNavigateToProfile,
   initialMode = 'feed',
+  onNavigateToPage,
 }) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<ForumPost[]>(forumPostsData);
@@ -344,7 +346,10 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
       {/* If AgriReels mode is selected, show AgriReelsFeed */}
       {communityMode === 'reels' ? (
         <div className="pt-2">
-          <AgriReelsFeed />
+          <AgriReelsFeed
+            setCurrentPage={(page) => onNavigateToPage?.(page)}
+            onNavigateToTool={(toolPage, toolId) => onNavigateToPage?.(toolPage, toolId)}
+          />
         </div>
       ) : (
         <>

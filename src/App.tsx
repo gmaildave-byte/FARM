@@ -95,6 +95,14 @@ export default function App() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedCounty, setSelectedCounty] = useState<string>('Uasin Gishu');
+  const [activeCalcId, setActiveCalcId] = useState<number | undefined>(undefined);
+
+  const navigateToTool = (page: Page, toolId?: number) => {
+    if (toolId && page === 'calculators') {
+      setActiveCalcId(toolId);
+    }
+    navigate(page);
+  };
 
   // Navigate to target page and maintain browser history stack
   const navigate = (nextPage: Page, options?: { replace?: boolean }) => {
@@ -228,6 +236,7 @@ export default function App() {
             isMobileFrame={isMobile}
             initialMode="reels"
             onNavigateToProfile={() => navigate('profile')}
+            onNavigateToPage={navigateToTool}
           />
         );
       case 'social-feed':
@@ -237,6 +246,7 @@ export default function App() {
             isMobileFrame={isMobile}
             initialMode="feed"
             onNavigateToProfile={() => navigate('profile')}
+            onNavigateToPage={navigateToTool}
           />
         );
       case 'messages':
@@ -335,7 +345,7 @@ export default function App() {
                 <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
             )}
-            <CalculatorsPage onBack={goBack} />
+            <CalculatorsPage onBack={goBack} initialCalcId={activeCalcId} />
           </div>
         );
       case 'markets':

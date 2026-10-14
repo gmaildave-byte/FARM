@@ -95,7 +95,7 @@ Provide a comprehensive, authoritative, practical response for this farmer.`;
     res.json({
       answer: answerText,
       isFallback: false,
-      source: 'AgriKnowledge AI (Gemini 3.8 Flash + KALRO Grounding)',
+      source: 'AgriHub AI (Gemini 3.8 Flash + KALRO Grounding)',
       disclaimer: 'AI guidance is for educational and advisory reference. Verify on-site with local agricultural extension officers or veterinary surgeons.',
     });
   } catch (error: any) {
@@ -106,7 +106,7 @@ Provide a comprehensive, authoritative, practical response for this farmer.`;
       answer: generateAgronomicFallbackAnswer(question || '', language, county, cropOrLivestock),
       isFallback: true,
       errorNotice: 'Advanced AI temporarily transitioned to local verified agronomy database.',
-      source: 'AgriKnowledge Hub Agronomy Knowledge Engine',
+      source: 'AgriHub Agronomy Knowledge Engine',
       disclaimer: 'This guidance is based on established Kenyan agricultural best practices.',
     });
   }
@@ -283,7 +283,7 @@ app.post('/api/payments/mpesa/stkpush', (req, res) => {
       String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
       String.fromCharCode(65 + Math.floor(Math.random() * 26));
 
-    const transactionRef = `AKH-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const transactionRef = `AGRI-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newTx: ServerTransaction = {
       id: `tx-${Date.now()}`,
@@ -294,7 +294,7 @@ app.post('/api/payments/mpesa/stkpush', (req, res) => {
       userPhone: '+' + cleanedPhone,
       purpose: purpose || 'featured_listing',
       targetId,
-      targetTitle: targetTitle || 'AgriKnowledge Hub Service',
+      targetTitle: targetTitle || 'AgriHub Service',
       amountKES: Number(amount),
       paymentMethod: 'mpesa',
       status: 'completed',
@@ -325,7 +325,7 @@ app.post('/api/payments/card', (req, res) => {
       return res.status(400).json({ error: 'Card number and valid amount are required' });
     }
 
-    const transactionRef = `AKH-CARD-${Date.now().toString().slice(-6)}`;
+    const transactionRef = `AGRI-CARD-${Date.now().toString().slice(-6)}`;
     const newTx: ServerTransaction = {
       id: `tx-${Date.now()}`,
       transactionRef,
@@ -335,7 +335,7 @@ app.post('/api/payments/card', (req, res) => {
       userPhone: 'Card Payment',
       purpose: purpose || 'subscription',
       targetId,
-      targetTitle: targetTitle || 'AgriKnowledge Hub Service',
+      targetTitle: targetTitle || 'AgriHub Service',
       amountKES: Number(amount),
       paymentMethod: 'card',
       status: 'completed',
@@ -638,7 +638,7 @@ function generateAgronomicFallbackAnswer(
 
   // General Agronomic Advice
   return isSwahili
-    ? `### Ushauri wa Kitaalamu wa Kilimo — AgriKnowledge Hub
+    ? `### Ushauri wa Kitaalamu wa Kilimo — AgriHub
 
 Asante kwa swali lako kuhusu kilimo cha kisasa nchini Kenya.
 
@@ -649,7 +649,7 @@ Asante kwa swali lako kuhusu kilimo cha kisasa nchini Kenya.
 4. **Mzunguko wa Mazao (Crop Rotation):** Usipande zao la jamii moja mfululizo katika shamba lilelile ili kuvunja mzunguko wa wadudu na magonjwa.
 
 *Kwa maelezo mahususi kuhusu zao au mfugo wako, chagua mada husika kwenye orodha kuu au uliza swali lako ukiainisha kaunti yako na zao unalotaka kulima.*`
-    : `### Expert Farming Advisory — AgriKnowledge Hub
+    : `### Expert Farming Advisory — AgriHub
 
 Thank you for your inquiry on practical agricultural production in Kenya.
 
