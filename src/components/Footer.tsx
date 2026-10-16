@@ -67,7 +67,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
             </li>
             <li>
               <button onClick={() => setCurrentPage('community')} className="hover:text-emerald-400 transition text-left">
-                Farmer Community & Reels
+                Farmer Community
               </button>
             </li>
             <li>

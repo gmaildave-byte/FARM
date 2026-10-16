@@ -555,12 +555,16 @@ export interface ForumPost {
     parentCommentId?: string;
     replyToAuthor?: string;
     author: string;
+    authorId?: string;
     authorUsername?: string;
     authorRole: string;
     authorAvatar?: string;
     text: string;
     timestamp: string;
     likes?: number;
+    isLiked?: boolean;
+    isEdited?: boolean;
+    editedAt?: string;
   }[];
 }
 

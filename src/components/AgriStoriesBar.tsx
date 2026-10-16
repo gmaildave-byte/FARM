@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus,
   X,
@@ -10,7 +10,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Camera,
-  Share2
+  Share2,
+  Pause,
+  Play
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '../context/NavigationContext';
@@ -103,6 +105,7 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
   const [stories, setStories] = useState<FarmStory[]>(initialFarmStories);
   const [activeStoryIdx, setActiveStoryIdx] = useState<number | null>(null);
   const [storyProgress, setStoryProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const [storyLiked, setStoryLiked] = useState<Record<string, boolean>>({});
   const [replyText, setReplyText] = useState('');
   const [storyToast, setStoryToast] = useState<string | null>(null);
@@ -114,6 +117,12 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
   const [newImage, setNewImage] = useState(
     'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1000&q=80'
   );
+
+  // Hold-to-pause & gesture tracking refs
+  const holdTimeoutRef = useRef<any>(null);
+  const pointerStartRef = useRef<{ time: number; x: number; y: number } | null>(null);
+  const isHoldingRef = useRef<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const activeStory = activeStoryIdx !== null ? stories[activeStoryIdx] : null;
 
@@ -127,9 +136,28 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
     }
   }, [activeOverlay, activeStoryIdx, newStoryModalOpen]);
 
-  // Handle ESC key to close active story or modal
+  // Reset progress only when active story index changes
+  useEffect(() => {
+    setStoryProgress(0);
+  }, [activeStoryIdx]);
+
+  // Synchronize video element playback with story pause state
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (isPaused) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play().catch(() => {});
+    }
+  }, [isPaused]);
+
+  // Handle Keyboard navigation: ESC to close, Left/Right arrows to step, Space to toggle pause
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept typing in inputs
+      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') {
+        return;
+      }
       if (e.key === 'Escape') {
         if (activeStoryIdx !== null) {
           closeOverlay('story-viewer');
@@ -139,24 +167,31 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
           closeOverlay('new-story');
           setNewStoryModalOpen(false);
         }
+      } else if (e.key === 'ArrowRight' && activeStoryIdx !== null) {
+        e.preventDefault();
+        handleNextStory();
+      } else if (e.key === 'ArrowLeft' && activeStoryIdx !== null) {
+        e.preventDefault();
+        handlePrevStory();
+      } else if (e.key === ' ' && activeStoryIdx !== null) {
+        e.preventDefault();
+        setIsPaused((p) => !p);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeStoryIdx, newStoryModalOpen, closeOverlay]);
+  }, [activeStoryIdx, newStoryModalOpen, closeOverlay, stories.length]);
 
-  // Auto-advance progress timer for Instagram-style story viewer
+  // Auto-advance progress timer for story viewer (freezes cleanly while isPaused is true)
   useEffect(() => {
     if (activeStoryIdx === null) {
-      setStoryProgress(0);
       return;
     }
 
-    setStoryProgress(0);
     const interval = setInterval(() => {
+      if (isPaused) return; // Keep progress frozen at current point while held or paused
       setStoryProgress((prev) => {
         if (prev >= 100) {
-          // Advance to next story or close if last
           if (activeStoryIdx < stories.length - 1) {
             setActiveStoryIdx(activeStoryIdx + 1);
             return 0;
@@ -166,18 +201,19 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
             return 0;
           }
         }
-        return prev + 2; // ~5 seconds per story
+        return prev + 1.25; // Smooth ~4.8 seconds per story
       });
-    }, 100);
+    }, 60);
 
     return () => clearInterval(interval);
-  }, [activeStoryIdx, stories.length, closeOverlay]);
+  }, [activeStoryIdx, isPaused, stories.length, closeOverlay]);
 
   const handleNextStory = () => {
     if (activeStoryIdx !== null) {
       if (activeStoryIdx < stories.length - 1) {
         setActiveStoryIdx(activeStoryIdx + 1);
       } else {
+        closeOverlay('story-viewer');
         setActiveStoryIdx(null);
       }
     }
@@ -192,6 +228,88 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
         setStoryProgress(0);
       }
     }
+  };
+
+  // Pointer / Touch Hold-to-pause & swipe gestures
+  const handleStoryPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // If clicking on buttons, inputs or links, let normal interaction happen
+    if ((e.target as HTMLElement).closest('button, input, textarea, a, form')) {
+      return;
+    }
+
+    pointerStartRef.current = { time: Date.now(), x: e.clientX, y: e.clientY };
+    isHoldingRef.current = false;
+
+    // After 180ms hold threshold, pause the story immediately
+    holdTimeoutRef.current = setTimeout(() => {
+      isHoldingRef.current = true;
+      setIsPaused(true);
+    }, 180);
+  };
+
+  const handleStoryPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!pointerStartRef.current) return;
+    const deltaX = Math.abs(e.clientX - pointerStartRef.current.x);
+    const deltaY = Math.abs(e.clientY - pointerStartRef.current.y);
+
+    // If significant dragging occurs, cancel the hold
+    if (deltaX > 25 || deltaY > 25) {
+      if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+      if (isHoldingRef.current) {
+        isHoldingRef.current = false;
+        setIsPaused(false);
+      }
+    }
+  };
+
+  const handleStoryPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
+
+    if (!pointerStartRef.current) return;
+    const duration = Date.now() - pointerStartRef.current.time;
+    const deltaX = e.clientX - pointerStartRef.current.x;
+    const deltaY = Math.abs(e.clientY - pointerStartRef.current.y);
+
+    const wasHeld = isHoldingRef.current || duration >= 220;
+    isHoldingRef.current = false;
+    setIsPaused(false);
+
+    // Detect horizontal swipe gesture: swipe left = next story, swipe right = prev story
+    if (Math.abs(deltaX) > 45 && deltaY < 60) {
+      if (deltaX < 0) {
+        handleNextStory();
+      } else {
+        handlePrevStory();
+      }
+      pointerStartRef.current = null;
+      return;
+    }
+
+    // If screen was held to pause & read, resume without advancing/retreating
+    if (wasHeld) {
+      pointerStartRef.current = null;
+      return;
+    }
+
+    // Quick tap (< 220ms): left 35% goes previous, right 65% goes next
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    if (clickX < rect.width * 0.35) {
+      handlePrevStory();
+    } else {
+      handleNextStory();
+    }
+    pointerStartRef.current = null;
+  };
+
+  const handleStoryPointerCancel = () => {
+    if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+    isHoldingRef.current = false;
+    setIsPaused(false);
+    pointerStartRef.current = null;
   };
 
   const handleToggleStoryLike = (storyId: string) => {
@@ -306,26 +424,76 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
 
       {/* Instagram Story Fullscreen Viewer Modal */}
       {activeStory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/95 backdrop-blur-md p-2 sm:p-4 animate-in fade-in duration-150">
-          <div className="relative max-w-sm w-full h-[90vh] max-h-[720px] bg-stone-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between">
-            {/* Background Story Image */}
-            <div className="absolute inset-0 z-0">
-              <img
-                src={activeStory.mediaUrl}
-                alt={activeStory.authorName}
-                className="w-full h-full object-cover"
-              />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/95 backdrop-blur-md p-2 sm:p-4 animate-in fade-in duration-150 select-none">
+          {/* Desktop External Prev/Next buttons */}
+          {activeStoryIdx !== null && activeStoryIdx > 0 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevStory();
+              }}
+              className="hidden md:flex absolute left-8 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full bg-white/10 hover:bg-white/30 text-white items-center justify-center backdrop-blur-md transition border border-white/20 cursor-pointer"
+              aria-label="Previous Story"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+
+          {activeStoryIdx !== null && activeStoryIdx < stories.length - 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextStory();
+              }}
+              className="hidden md:flex absolute right-8 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full bg-white/10 hover:bg-white/30 text-white items-center justify-center backdrop-blur-md transition border border-white/20 cursor-pointer"
+              aria-label="Next Story"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
+
+          <div
+            onPointerDown={handleStoryPointerDown}
+            onPointerMove={handleStoryPointerMove}
+            onPointerUp={handleStoryPointerUp}
+            onPointerCancel={handleStoryPointerCancel}
+            onPointerLeave={handleStoryPointerCancel}
+            className="relative max-w-sm w-full h-[90vh] max-h-[720px] bg-stone-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between touch-none cursor-pointer"
+          >
+            {/* Background Story Image / Video */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+              {activeStory.mediaUrl.endsWith('.mp4') ? (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  loop
+                  src={activeStory.mediaUrl}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={activeStory.mediaUrl}
+                  alt={activeStory.authorName}
+                  className="w-full h-full object-cover"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
             </div>
 
-            {/* Left & Right Tap Zones for Prev / Next */}
-            <div className="absolute inset-0 z-10 flex">
-              <div className="w-1/3 h-full cursor-pointer" onClick={handlePrevStory} />
-              <div className="w-2/3 h-full cursor-pointer" onClick={handleNextStory} />
-            </div>
+            {/* Live Press-and-Hold Paused Indicator */}
+            {isPaused && (
+              <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-semibold border border-white/20 animate-in fade-in duration-150">
+                <Pause className="w-3 h-3 fill-emerald-400 text-emerald-400" />
+                <span>Paused (Release to resume)</span>
+              </div>
+            )}
 
             {/* Top Bar with Story Progress Bars & Author */}
-            <div className="relative z-20 p-4 space-y-3">
+            <div className="relative z-20 p-4 space-y-3 pointer-events-auto">
               {/* Progress Bar Segments */}
               <div className="flex items-center gap-1.5 w-full">
                 {stories.map((s, idx) => (
@@ -334,7 +502,7 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
                     className="flex-1 h-1 rounded-full bg-white/30 overflow-hidden"
                   >
                     <div
-                      className="h-full bg-white transition-all duration-100 ease-linear"
+                      className={`h-full bg-white ${isPaused ? '' : 'transition-all duration-75 ease-linear'}`}
                       style={{
                         width:
                           idx < (activeStoryIdx || 0)
@@ -353,7 +521,7 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-emerald-400 bg-stone-800">
                     <img
-                      src={activeStory.mediaUrl}
+                      src={activeStory.authorAvatar || activeStory.mediaUrl}
                       alt={activeStory.authorName}
                       className="w-full h-full object-cover"
                     />
@@ -367,23 +535,40 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    closeOverlay('story-viewer');
-                    setActiveStoryIdx(null);
-                  }}
-                  className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition"
-                  aria-label="Close story"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsPaused((p) => !p);
+                    }}
+                    className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition"
+                    title={isPaused ? 'Resume story' : 'Pause story'}
+                    aria-label={isPaused ? 'Resume' : 'Pause'}
+                  >
+                    {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeOverlay('story-viewer');
+                      setActiveStoryIdx(null);
+                    }}
+                    className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition"
+                    aria-label="Close story"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Bottom Caption, Likes & Quick Reply */}
-            <div className="relative z-20 p-4 space-y-3">
+            <div className="relative z-20 p-4 space-y-3 pointer-events-auto">
               {/* Caption */}
-              <div className="bg-black/40 backdrop-blur-xs p-3 rounded-2xl border border-white/10 text-white">
+              <div className="bg-black/50 backdrop-blur-sm p-3 rounded-2xl border border-white/10 text-white">
                 <p className="text-xs leading-relaxed font-medium">{activeStory.caption}</p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {activeStory.tags.map((t) => (
@@ -400,13 +585,15 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
                   <input
                     type="text"
                     value={replyText}
+                    onFocus={() => setIsPaused(true)}
+                    onBlur={() => setIsPaused(false)}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder={`Reply to ${activeStory.authorName.split(' ')[0]}...`}
-                    className="flex-1 bg-black/50 text-white placeholder-stone-400 px-3.5 py-2 rounded-full text-xs border border-white/20 focus:outline-none focus:ring-1 focus:ring-emerald-400 backdrop-blur-xs"
+                    className="flex-1 bg-black/60 text-white placeholder-stone-400 px-3.5 py-2 rounded-full text-xs border border-white/20 focus:outline-none focus:ring-1 focus:ring-emerald-400 backdrop-blur-xs"
                   />
                   <button
                     type="submit"
-                    className="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full transition shrink-0"
+                    className="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full transition shrink-0 cursor-pointer"
                     title="Send quick reply"
                   >
                     <Send className="w-3.5 h-3.5" />
@@ -414,8 +601,12 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
                 </form>
 
                 <button
-                  onClick={() => handleToggleStoryLike(activeStory.id)}
-                  className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition shrink-0 border border-white/20"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleStoryLike(activeStory.id);
+                  }}
+                  className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition shrink-0 border border-white/20 cursor-pointer"
                   title="Like story"
                 >
                   <Heart

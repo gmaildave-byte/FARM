@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Heart,
   MessageCircle,
@@ -20,7 +20,11 @@ import {
   Trash2,
   Edit2,
   CornerDownRight,
-  Play
+  Play,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  Loader2
 } from 'lucide-react';
 import { forumPostsData } from '../data/forum';
 import { ForumPost, ReportItem, Page } from '../types';
@@ -68,12 +72,37 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
+  
+  // Specific reply targeting: keeps track of target comment, root thread parent, and author
   const [replyingToTarget, setReplyingToTarget] = useState<{
     postId: string;
     commentId: string;
+    rootParentId: string;
     authorName: string;
   } | null>(null);
+
+  // Preserve drafts per reply target or general comment
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [newCommentText, setNewCommentText] = useState('');
+  const [expandedThreads, setExpandedThreads] = useState<Record<string, boolean>>({});
+  const [visibleCommentsCount, setVisibleCommentsCount] = useState<Record<string, number>>({});
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  // Comment Editing
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
+
+  // Comment Reporting
+  const [reportingCommentModal, setReportingCommentModal] = useState<{
+    id: string;
+    author: string;
+    text: string;
+  } | null>(null);
+
+  // Refs for auto-scroll and focus
+  const replyComposerRef = useRef<HTMLDivElement | null>(null);
+  const replyInputRef = useRef<HTMLInputElement | null>(null);
+
   const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState<string | null>(null);
 
@@ -151,23 +180,82 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
     });
   };
 
-  const handleAddComment = (postId: string) => {
-    if (!newCommentText.trim()) return;
+  // Trigger reply on a specific comment with auto-scroll and focus
+  const handleInitiateReply = (
+    postId: string,
+    commentId: string,
+    authorName: string,
+    rootParentId?: string
+  ) => {
+    const parentId = rootParentId || commentId;
+    setReplyingToTarget({
+      postId,
+      commentId,
+      rootParentId: parentId,
+      authorName,
+    });
+
+    // Auto expand parent thread so conversation context is completely visible
+    setExpandedThreads((prev) => ({ ...prev, [parentId]: true }));
+
+    // Scroll inline composer into view reliably
+    setTimeout(() => {
+      if (replyComposerRef.current) {
+        replyComposerRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+        replyInputRef.current?.focus();
+      }
+    }, 60);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingToTarget(null);
+  };
+
+  // Submit a comment or threaded reply
+  const handleSubmitCommentOrReply = (
+    postId: string,
+    parentCommentId?: string,
+    replyToAuthor?: string,
+    explicitText?: string
+  ) => {
+    const draftText =
+      explicitText !== undefined
+        ? explicitText
+        : parentCommentId
+        ? replyDrafts[parentCommentId] || ''
+        : newCommentText;
+
+    const trimmed = draftText.trim();
+    if (!trimmed || isSubmittingComment) return;
+
+    setIsSubmittingComment(true);
+
+    const newReply = {
+      id: `rep-${Date.now()}`,
+      parentCommentId,
+      replyToAuthor,
+      author: user?.name || 'Adams Kipkoech Kering',
+      authorId: user?.id || 'user-current',
+      authorUsername: user?.username || 'adams_kering',
+      authorRole:
+        user?.role === 'farmer'
+          ? 'Grower & Contributor'
+          : user?.role === 'expert'
+          ? 'Agronomist & Specialist'
+          : 'Agricultural Member',
+      authorAvatar: user?.avatar,
+      text: trimmed,
+      timestamp: 'Just now',
+      likes: 0,
+      isLiked: false,
+    };
 
     setPosts((currentList) =>
       currentList.map((p) => {
         if (p.id === postId) {
-          const isThreadedReply = replyingToTarget && replyingToTarget.postId === postId;
-          const newReply = {
-            id: `rep-${Date.now()}`,
-            parentCommentId: isThreadedReply ? replyingToTarget.commentId : undefined,
-            replyToAuthor: isThreadedReply ? replyingToTarget.authorName : undefined,
-            author: user?.name || 'Adams Kipkoech Kering',
-            authorUsername: user?.username || 'adams_kering',
-            authorRole: 'Grower & Contributor',
-            text: newCommentText.trim(),
-            timestamp: 'Just now',
-          };
           return {
             ...p,
             commentsCount: (p.commentsCount || p.replies.length) + 1,
@@ -177,9 +265,122 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
         return p;
       })
     );
-    setNewCommentText('');
+
+    if (parentCommentId) {
+      setExpandedThreads((prev) => ({ ...prev, [parentCommentId]: true }));
+      setReplyDrafts((prev) => {
+        const next = { ...prev };
+        delete next[parentCommentId];
+        return next;
+      });
+    } else {
+      setNewCommentText('');
+    }
+
     setReplyingToTarget(null);
-    showToast('Reply added to discussion thread!');
+    setIsSubmittingComment(false);
+    showToast('Reply published to discussion thread! 🌱');
+  };
+
+  // Toggle Like on an individual comment / reply
+  const handleToggleCommentLike = (postId: string, commentId: string) => {
+    setPosts((list) =>
+      list.map((post) => {
+        if (post.id === postId) {
+          const updatedReplies = post.replies.map((reply) => {
+            if (reply.id === commentId) {
+              const currentlyLiked = !reply.isLiked;
+              const currentLikes = reply.likes || 0;
+              return {
+                ...reply,
+                isLiked: currentlyLiked,
+                likes: currentlyLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1),
+              };
+            }
+            return reply;
+          });
+          return { ...post, replies: updatedReplies };
+        }
+        return post;
+      })
+    );
+  };
+
+  // Start Editing a Comment
+  const handleStartEditComment = (commentId: string, currentText: string) => {
+    setEditingCommentId(commentId);
+    setEditingCommentText(currentText);
+  };
+
+  // Save Edited Comment
+  const handleSaveEditComment = (postId: string, commentId: string) => {
+    if (!editingCommentText.trim()) return;
+    setPosts((list) =>
+      list.map((post) => {
+        if (post.id === postId) {
+          const updatedReplies = post.replies.map((reply) => {
+            if (reply.id === commentId) {
+              return {
+                ...reply,
+                text: editingCommentText.trim(),
+                isEdited: true,
+                editedAt: 'Just now',
+              };
+            }
+            return reply;
+          });
+          return { ...post, replies: updatedReplies };
+        }
+        return post;
+      })
+    );
+    setEditingCommentId(null);
+    setEditingCommentText('');
+    showToast('Comment updated.');
+  };
+
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditingCommentText('');
+  };
+
+  // Delete Comment / Reply
+  const handleDeleteComment = (postId: string, commentId: string) => {
+    if (!confirm('Are you sure you want to delete this reply?')) return;
+    setPosts((list) =>
+      list.map((post) => {
+        if (post.id === postId) {
+          // Filter out the deleted comment and its child replies if top-level
+          const updatedReplies = post.replies.filter(
+            (r) => r.id !== commentId && r.parentCommentId !== commentId
+          );
+          const countDiff = post.replies.length - updatedReplies.length;
+          return {
+            ...post,
+            commentsCount: Math.max(0, (post.commentsCount || post.replies.length) - countDiff),
+            replies: updatedReplies,
+          };
+        }
+        return post;
+      })
+    );
+    showToast('Comment deleted.');
+  };
+
+  // Expand / Collapse Thread
+  const handleToggleThreadExpand = (commentId: string) => {
+    setExpandedThreads((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
+  };
+
+  // Load more comments for post (pagination)
+  const handleLoadMoreComments = (postId: string, totalCount: number) => {
+    setVisibleCommentsCount((prev) => ({
+      ...prev,
+      [postId]: (prev[postId] || 4) + 6,
+    }));
   };
 
   const handleCreatePost = (e: React.FormEvent) => {
@@ -294,15 +495,15 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 pb-3 border-b border-stone-200/80">
         <div>
           <h1 className="text-[28px] sm:text-[32px] font-bold text-[#183D29] tracking-tight font-serif select-none leading-none">
-            Agricultural Community & Media
+            Community
           </h1>
           <p className="text-xs text-stone-500 mt-1">
-            Verified field updates, farming stories, short reels, and agronomic Q&A across Kenya
+            Global agricultural social platform: verified field updates, agronomic advice, discussions, and clips
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Discussions vs Reels View Switcher */}
+          {/* Discussions vs Clips View Switcher */}
           <div className="flex items-center bg-stone-100 p-1 rounded-xl border border-stone-200/60 text-xs">
             <button
               onClick={() => setCommunityMode('feed')}
@@ -324,7 +525,7 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span>AgriReels</span>
+              <span>Clips</span>
             </button>
           </div>
 
@@ -660,134 +861,579 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
 
                 {/* Expandable Comments Drawer with Threaded Replies */}
                 {commentsOpen && (
-                  <div className="mt-3 bg-stone-100/70 rounded-2xl p-3.5 space-y-3 border border-stone-200/60 animate-in fade-in duration-200">
-                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  <div className="mt-3 bg-stone-100/80 rounded-2xl p-3 sm:p-4 space-y-3.5 border border-stone-200/80 animate-in fade-in duration-200">
+                    {/* Header bar of comments drawer */}
+                    <div className="flex items-center justify-between text-xs text-stone-600 pb-1 border-b border-stone-200/60 font-medium">
+                      <span>Discussion ({displayCommentsCount} {displayCommentsCount === 1 ? 'response' : 'responses'})</span>
+                      <span className="text-[11px] text-stone-500">Threaded agronomic Q&A</span>
+                    </div>
+
+                    <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1 overscroll-contain">
                       {post.replies.length === 0 ? (
-                        <p className="text-xs text-stone-500 italic py-1">
-                          No replies yet. Be the first to share your experience or ask an agronomy question!
-                        </p>
+                        <div className="text-center py-6 px-4 bg-white/60 rounded-xl border border-stone-200/60 space-y-1">
+                          <MessageCircle className="w-6 h-6 text-stone-300 mx-auto" />
+                          <p className="text-xs text-stone-600 font-semibold">No responses yet</p>
+                          <p className="text-[11px] text-stone-400">
+                            Be the first to share your field experience or ask an agronomy question!
+                          </p>
+                        </div>
                       ) : (
-                        post.replies
-                          .filter((r) => !r.parentCommentId)
-                          .map((reply) => {
-                            const childReplies = post.replies.filter((r) => r.parentCommentId === reply.id);
+                        (() => {
+                          const topLevelReplies = post.replies.filter((r) => !r.parentCommentId);
+                          const limit = visibleCommentsCount[post.id] || 4;
+                          const displayedReplies = topLevelReplies.slice(0, limit);
+                          const hasMore = topLevelReplies.length > limit;
 
-                            return (
-                              <div
-                                key={reply.id}
-                                className="text-xs bg-white p-3 rounded-xl border border-stone-200/60 space-y-1.5 shadow-2xs"
-                              >
-                                <div className="flex items-center justify-between text-stone-500">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-bold text-stone-900">{reply.author}</span>
-                                    <span className="text-[10px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-medium">
-                                      {reply.authorRole || 'Farmer'}
-                                    </span>
-                                  </div>
-                                  <span className="text-[10px] text-stone-400">{reply.timestamp}</span>
-                                </div>
-                                <p className="text-stone-700 text-[13px] leading-relaxed">{reply.text}</p>
+                          return (
+                            <>
+                              {displayedReplies.map((reply) => {
+                                const childReplies = post.replies.filter((r) => r.parentCommentId === reply.id);
+                                const isMyComment =
+                                  reply.author === user?.name ||
+                                  reply.authorUsername === user?.username ||
+                                  user?.role === 'admin';
+                                const isEditing = editingCommentId === reply.id;
+                                const isReplyingDirectly =
+                                  replyingToTarget &&
+                                  replyingToTarget.postId === post.id &&
+                                  replyingToTarget.commentId === reply.id;
+                                const isThreadExpanded = expandedThreads[reply.id] !== false;
 
-                                <div className="flex items-center gap-3 pt-0.5">
-                                  <button
-                                    onClick={() =>
-                                      setReplyingToTarget({
-                                        postId: post.id,
-                                        commentId: reply.id,
-                                        authorName: reply.author,
-                                      })
-                                    }
-                                    className="flex items-center gap-1 text-[11px] text-emerald-800 font-semibold hover:underline"
+                                return (
+                                  <div
+                                    key={reply.id}
+                                    className="text-xs bg-white p-3.5 rounded-2xl border border-stone-200/80 space-y-2 shadow-2xs hover:border-emerald-700/30 transition-colors"
                                   >
-                                    <CornerDownRight className="w-3 h-3 text-emerald-700" />
-                                    <span>Reply</span>
-                                  </button>
-                                </div>
-
-                                {/* Threaded Replies Indented Under Parent Comment */}
-                                {childReplies.length > 0 && (
-                                  <div className="border-l-2 border-emerald-600/40 pl-3 ml-2 mt-2 space-y-2">
-                                    {childReplies.map((child) => (
-                                      <div
-                                        key={child.id}
-                                        className="text-xs bg-stone-50 p-2.5 rounded-lg border border-stone-200/70 space-y-1"
-                                      >
-                                        <div className="flex items-center justify-between text-stone-500">
-                                          <div className="flex items-center gap-1.5 font-bold text-stone-900">
-                                            <span>{child.author}</span>
-                                            <span className="text-[10px] text-stone-400 font-normal">replied to</span>
-                                            <span className="text-emerald-700 text-[11px]">
-                                              @{child.replyToAuthor || reply.author}
-                                            </span>
-                                          </div>
-                                          <span className="text-[10px] text-stone-400">{child.timestamp}</span>
+                                    {/* Author & Header */}
+                                    <div className="flex items-start justify-between text-stone-500">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-7 h-7 rounded-full bg-emerald-800 text-white flex items-center justify-center font-bold text-[10px] shrink-0 overflow-hidden">
+                                          {reply.authorAvatar ? (
+                                            <img
+                                              src={reply.authorAvatar}
+                                              alt={reply.author}
+                                              className="w-full h-full object-cover"
+                                            />
+                                          ) : (
+                                            <span>{reply.author.slice(0, 2).toUpperCase()}</span>
+                                          )}
                                         </div>
-                                        <p className="text-stone-700 text-[12.5px] leading-relaxed">{child.text}</p>
+                                        <div>
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="font-bold text-stone-900 text-xs">
+                                              {reply.author}
+                                            </span>
+                                            <span className="text-[10px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md font-semibold border border-emerald-200/60">
+                                              {reply.authorRole || 'Farmer'}
+                                            </span>
+                                            {reply.isEdited && (
+                                              <span className="text-[10px] text-stone-400 italic">
+                                                (edited)
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="text-[10px] text-stone-400">{reply.timestamp}</div>
+                                        </div>
+                                      </div>
+
+                                      {/* Comment Actions (Like, Edit, Delete, Report) */}
+                                      <div className="flex items-center gap-1 text-stone-400">
+                                        {/* Like Comment */}
                                         <button
+                                          type="button"
+                                          onClick={() => handleToggleCommentLike(post.id, reply.id)}
+                                          className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-medium transition ${
+                                            reply.isLiked
+                                              ? 'text-rose-600 bg-rose-50'
+                                              : 'text-stone-500 hover:text-rose-600 hover:bg-stone-50'
+                                          }`}
+                                          title="Like comment"
+                                        >
+                                          <Heart
+                                            className={`w-3.5 h-3.5 ${
+                                              reply.isLiked ? 'fill-rose-500 text-rose-500' : ''
+                                            }`}
+                                          />
+                                          <span>{reply.likes || 0}</span>
+                                        </button>
+
+                                        {isMyComment && (
+                                          <>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleStartEditComment(reply.id, reply.text)}
+                                              className="p-1 hover:text-stone-800 rounded transition"
+                                              title="Edit comment"
+                                            >
+                                              <Edit2 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleDeleteComment(post.id, reply.id)}
+                                              className="p-1 hover:text-red-600 rounded transition"
+                                              title="Delete comment"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                          </>
+                                        )}
+
+                                        <button
+                                          type="button"
                                           onClick={() =>
-                                            setReplyingToTarget({
-                                              postId: post.id,
-                                              commentId: reply.id,
-                                              authorName: child.author,
+                                            setReportingCommentModal({
+                                              id: reply.id,
+                                              author: reply.author,
+                                              text: reply.text,
                                             })
                                           }
-                                          className="flex items-center gap-1 text-[10px] text-emerald-800 font-semibold hover:underline"
+                                          className="p-1 hover:text-red-500 rounded transition"
+                                          title="Report comment"
                                         >
-                                          <CornerDownRight className="w-2.5 h-2.5" />
-                                          <span>Reply</span>
+                                          <Flag className="w-3.5 h-3.5" />
                                         </button>
                                       </div>
-                                    ))}
+                                    </div>
+
+                                    {/* Comment Text or Inline Edit Textarea */}
+                                    {isEditing ? (
+                                      <div className="space-y-2 pt-1">
+                                        <textarea
+                                          value={editingCommentText}
+                                          onChange={(e) => setEditingCommentText(e.target.value)}
+                                          rows={2}
+                                          className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#183D29]"
+                                        />
+                                        <div className="flex items-center justify-end gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={handleCancelEditComment}
+                                            className="px-2.5 py-1 text-[11px] font-semibold text-stone-600 hover:bg-stone-100 rounded-lg"
+                                          >
+                                            Cancel
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSaveEditComment(post.id, reply.id)}
+                                            className="px-3 py-1 text-[11px] font-bold text-white bg-[#183D29] hover:bg-[#122e1f] rounded-lg transition"
+                                          >
+                                            Save
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-stone-800 text-[13px] leading-relaxed pl-1 whitespace-pre-wrap">
+                                        {reply.text}
+                                      </p>
+                                    )}
+
+                                    {/* Action Bar (Reply + Thread Collapse Toggle) */}
+                                    <div className="flex items-center justify-between pt-1 border-t border-stone-100">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleInitiateReply(post.id, reply.id, reply.author, reply.id)
+                                        }
+                                        className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg transition ${
+                                          isReplyingDirectly
+                                            ? 'text-emerald-900 bg-emerald-100'
+                                            : 'text-emerald-800 hover:text-emerald-950 hover:bg-emerald-50'
+                                        }`}
+                                      >
+                                        <CornerDownRight className="w-3.5 h-3.5 text-emerald-700" />
+                                        <span>Reply</span>
+                                      </button>
+
+                                      {childReplies.length > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleThreadExpand(reply.id)}
+                                          className="flex items-center gap-1 text-[11px] font-semibold text-stone-500 hover:text-stone-800"
+                                        >
+                                          <span>
+                                            {isThreadExpanded
+                                              ? 'Hide replies'
+                                              : `View ${childReplies.length} ${
+                                                  childReplies.length === 1 ? 'reply' : 'replies'
+                                                }`}
+                                          </span>
+                                          {isThreadExpanded ? (
+                                            <ChevronUp className="w-3.5 h-3.5" />
+                                          ) : (
+                                            <ChevronDown className="w-3.5 h-3.5" />
+                                          )}
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    {/* INLINE COMPOSER Directly Beneath Parent Comment */}
+                                    {isReplyingDirectly && (
+                                      <div
+                                        ref={replyComposerRef}
+                                        className="mt-2.5 p-3 bg-emerald-50/90 rounded-2xl border border-emerald-300 space-y-2 animate-in fade-in zoom-in-98 shadow-xs scroll-mb-28"
+                                      >
+                                        <div className="flex items-center justify-between text-xs text-emerald-950 font-medium">
+                                          <div className="flex items-center gap-1.5">
+                                            <CornerDownRight className="w-3.5 h-3.5 text-emerald-700" />
+                                            <span>
+                                              Replying to <strong>@{replyingToTarget.authorName}</strong>
+                                            </span>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={handleCancelReply}
+                                            className="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-emerald-100 transition"
+                                            title="Cancel reply"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            ref={replyInputRef}
+                                            type="text"
+                                            autoFocus
+                                            value={replyDrafts[reply.id] || ''}
+                                            onChange={(e) =>
+                                              setReplyDrafts((prev) => ({
+                                                ...prev,
+                                                [reply.id]: e.target.value,
+                                              }))
+                                            }
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                handleSubmitCommentOrReply(
+                                                  post.id,
+                                                  reply.id,
+                                                  replyingToTarget.authorName
+                                                );
+                                              } else if (e.key === 'Escape') {
+                                                handleCancelReply();
+                                              }
+                                            }}
+                                            placeholder={`Write reply to @${replyingToTarget.authorName}...`}
+                                            className="flex-1 px-3 py-2 bg-white rounded-xl text-xs border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-[#183D29]"
+                                          />
+                                          <button
+                                            type="button"
+                                            disabled={
+                                              !(replyDrafts[reply.id] || '').trim() || isSubmittingComment
+                                            }
+                                            onClick={() =>
+                                              handleSubmitCommentOrReply(
+                                                post.id,
+                                                reply.id,
+                                                replyingToTarget.authorName
+                                              )
+                                            }
+                                            className="px-3.5 py-2 bg-[#183D29] text-white rounded-xl hover:bg-[#122e1f] transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                          >
+                                            {isSubmittingComment ? (
+                                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : (
+                                              <Send className="w-3.5 h-3.5" />
+                                            )}
+                                            <span>Reply</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Nested Threaded Child Replies */}
+                                    {childReplies.length > 0 && isThreadExpanded && (
+                                      <div className="border-l-2 border-emerald-600/30 pl-3 ml-2 mt-2 space-y-2.5 pt-1">
+                                        {childReplies.map((child) => {
+                                          const isMyChild =
+                                            child.author === user?.name ||
+                                            child.authorUsername === user?.username ||
+                                            user?.role === 'admin';
+                                          const isEditingChild = editingCommentId === child.id;
+                                          const isReplyingChild =
+                                            replyingToTarget &&
+                                            replyingToTarget.postId === post.id &&
+                                            replyingToTarget.commentId === child.id;
+
+                                          return (
+                                            <div
+                                              key={child.id}
+                                              className="text-xs bg-stone-50/90 p-2.5 sm:p-3 rounded-xl border border-stone-200/70 space-y-1.5 shadow-2xs hover:bg-stone-50 transition"
+                                            >
+                                              {/* Child Header */}
+                                              <div className="flex items-start justify-between text-stone-500">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                  <div className="w-5 h-5 rounded-full bg-emerald-900 text-white flex items-center justify-center font-bold text-[9px] shrink-0 overflow-hidden">
+                                                    {child.authorAvatar ? (
+                                                      <img
+                                                        src={child.authorAvatar}
+                                                        alt={child.author}
+                                                        className="w-full h-full object-cover"
+                                                      />
+                                                    ) : (
+                                                      <span>{child.author.slice(0, 2).toUpperCase()}</span>
+                                                    )}
+                                                  </div>
+                                                  <span className="font-bold text-stone-900">
+                                                    {child.author}
+                                                  </span>
+                                                  <span className="text-[10px] text-stone-400">
+                                                    replied to
+                                                  </span>
+                                                  <span className="text-emerald-800 text-[11px] font-semibold bg-emerald-50 px-1 rounded">
+                                                    @{child.replyToAuthor || reply.author}
+                                                  </span>
+                                                  {child.isEdited && (
+                                                    <span className="text-[10px] text-stone-400 italic">
+                                                      (edited)
+                                                    </span>
+                                                  )}
+                                                </div>
+
+                                                {/* Child Actions */}
+                                                <div className="flex items-center gap-1 text-stone-400">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      handleToggleCommentLike(post.id, child.id)
+                                                    }
+                                                    className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium transition ${
+                                                      child.isLiked
+                                                        ? 'text-rose-600 bg-rose-50'
+                                                        : 'text-stone-500 hover:text-rose-600'
+                                                    }`}
+                                                    title="Like reply"
+                                                  >
+                                                    <Heart
+                                                      className={`w-3 h-3 ${
+                                                        child.isLiked ? 'fill-rose-500 text-rose-500' : ''
+                                                      }`}
+                                                    />
+                                                    <span>{child.likes || 0}</span>
+                                                  </button>
+
+                                                  {isMyChild && (
+                                                    <>
+                                                      <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                          handleStartEditComment(child.id, child.text)
+                                                        }
+                                                        className="p-0.5 hover:text-stone-800 rounded transition"
+                                                        title="Edit reply"
+                                                      >
+                                                        <Edit2 className="w-3 h-3" />
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                          handleDeleteComment(post.id, child.id)
+                                                        }
+                                                        className="p-0.5 hover:text-red-600 rounded transition"
+                                                        title="Delete reply"
+                                                      >
+                                                        <Trash2 className="w-3 h-3" />
+                                                      </button>
+                                                    </>
+                                                  )}
+
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      setReportingCommentModal({
+                                                        id: child.id,
+                                                        author: child.author,
+                                                        text: child.text,
+                                                      })
+                                                    }
+                                                    className="p-0.5 hover:text-red-500 rounded transition"
+                                                    title="Report reply"
+                                                  >
+                                                    <Flag className="w-3 h-3" />
+                                                  </button>
+                                                </div>
+                                              </div>
+
+                                              {/* Child Text or Inline Edit */}
+                                              {isEditingChild ? (
+                                                <div className="space-y-1.5 pt-1">
+                                                  <textarea
+                                                    value={editingCommentText}
+                                                    onChange={(e) =>
+                                                      setEditingCommentText(e.target.value)
+                                                    }
+                                                    rows={2}
+                                                    className="w-full p-2 bg-white border border-stone-200 rounded-lg text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-[#183D29]"
+                                                  />
+                                                  <div className="flex items-center justify-end gap-1.5">
+                                                    <button
+                                                      type="button"
+                                                      onClick={handleCancelEditComment}
+                                                      className="px-2 py-0.5 text-[10px] text-stone-600 hover:bg-stone-200/60 rounded"
+                                                    >
+                                                      Cancel
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        handleSaveEditComment(post.id, child.id)
+                                                      }
+                                                      className="px-2.5 py-0.5 text-[10px] font-bold text-white bg-[#183D29] hover:bg-[#122e1f] rounded"
+                                                    >
+                                                      Save
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                <p className="text-stone-700 text-[12.5px] leading-relaxed whitespace-pre-wrap">
+                                                  {child.text}
+                                                </p>
+                                              )}
+
+                                              {/* Child Reply Trigger Button */}
+                                              <div className="flex items-center justify-between pt-0.5">
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    handleInitiateReply(
+                                                      post.id,
+                                                      child.id,
+                                                      child.author,
+                                                      reply.id
+                                                    )
+                                                  }
+                                                  className="flex items-center gap-1 text-[10.5px] text-emerald-800 font-bold hover:underline"
+                                                >
+                                                  <CornerDownRight className="w-3 h-3" />
+                                                  <span>Reply</span>
+                                                </button>
+                                                <span className="text-[10px] text-stone-400">
+                                                  {child.timestamp}
+                                                </span>
+                                              </div>
+
+                                              {/* INLINE COMPOSER Directly Beneath This Child Reply */}
+                                              {isReplyingChild && (
+                                                <div
+                                                  ref={replyComposerRef}
+                                                  className="mt-2 p-2.5 bg-emerald-50 rounded-xl border border-emerald-300 space-y-1.5 animate-in fade-in zoom-in-98 scroll-mb-28"
+                                                >
+                                                  <div className="flex items-center justify-between text-[11px] text-emerald-950 font-medium">
+                                                    <span>
+                                                      Replying to <strong>@{child.author}</strong>
+                                                    </span>
+                                                    <button
+                                                      type="button"
+                                                      onClick={handleCancelReply}
+                                                      className="text-stone-400 hover:text-stone-700 p-0.5"
+                                                    >
+                                                      <X className="w-3 h-3" />
+                                                    </button>
+                                                  </div>
+
+                                                  <div className="flex items-center gap-1.5">
+                                                    <input
+                                                      ref={replyInputRef}
+                                                      type="text"
+                                                      autoFocus
+                                                      value={replyDrafts[reply.id] || ''}
+                                                      onChange={(e) =>
+                                                        setReplyDrafts((prev) => ({
+                                                          ...prev,
+                                                          [reply.id]: e.target.value,
+                                                        }))
+                                                      }
+                                                      onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                          handleSubmitCommentOrReply(
+                                                            post.id,
+                                                            reply.id,
+                                                            child.author
+                                                          );
+                                                        } else if (e.key === 'Escape') {
+                                                          handleCancelReply();
+                                                        }
+                                                      }}
+                                                      placeholder={`Reply to @${child.author}...`}
+                                                      className="flex-1 px-2.5 py-1.5 bg-white rounded-lg text-xs border border-emerald-200 focus:outline-none focus:ring-1 focus:ring-[#183D29]"
+                                                    />
+                                                    <button
+                                                      type="button"
+                                                      disabled={
+                                                        !(replyDrafts[reply.id] || '').trim() ||
+                                                        isSubmittingComment
+                                                      }
+                                                      onClick={() =>
+                                                        handleSubmitCommentOrReply(
+                                                          post.id,
+                                                          reply.id,
+                                                          child.author
+                                                        )
+                                                      }
+                                                      className="px-2.5 py-1.5 bg-[#183D29] text-white rounded-lg hover:bg-[#122e1f] transition active:scale-95 text-xs font-bold flex items-center gap-1 disabled:opacity-50"
+                                                    >
+                                                      <Send className="w-3 h-3" />
+                                                      <span>Reply</span>
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            );
-                          })
+                                );
+                              })}
+
+                              {/* Load More Comments Pagination Button */}
+                              {hasMore && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleLoadMoreComments(post.id, topLevelReplies.length)
+                                  }
+                                  className="w-full py-2 text-center text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-white/70 hover:bg-white rounded-xl border border-stone-200/80 transition shadow-2xs"
+                                >
+                                  Load older comments ({topLevelReplies.length - limit} more)
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()
                       )}
                     </div>
 
-                    {/* Active Replying To Target Notification */}
-                    {replyingToTarget && replyingToTarget.postId === post.id && (
-                      <div className="flex items-center justify-between bg-emerald-50 px-3 py-1.5 rounded-xl text-xs text-emerald-950 border border-emerald-200 animate-in fade-in">
-                        <div className="flex items-center gap-1.5">
-                          <CornerDownRight className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>
-                            Replying to <strong>@{replyingToTarget.authorName}</strong>
-                          </span>
-                        </div>
+                    {/* Top-Level Add Comment Input */}
+                    <div className="pt-2 border-t border-stone-200/80">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Write an agronomic answer or comment..."
+                          value={newCommentText}
+                          onChange={(e) => setNewCommentText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSubmitCommentOrReply(post.id);
+                            }
+                          }}
+                          className="flex-1 px-3 py-2 bg-white rounded-xl text-xs border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#183D29] shadow-2xs"
+                        />
                         <button
-                          onClick={() => setReplyingToTarget(null)}
-                          className="text-stone-400 hover:text-stone-700 p-0.5"
-                          title="Cancel reply"
+                          type="button"
+                          disabled={!newCommentText.trim() || isSubmittingComment}
+                          onClick={() => handleSubmitCommentOrReply(post.id)}
+                          className="px-3.5 py-2 bg-[#183D29] text-white rounded-xl hover:bg-[#122e1f] transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
+                          title="Post Comment"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          {isSubmittingComment ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Send className="w-3.5 h-3.5" />
+                          )}
+                          <span className="hidden sm:inline text-xs font-bold">Comment</span>
                         </button>
                       </div>
-                    )}
-
-                    {/* Add comment input */}
-                    <div className="flex items-center gap-2 pt-1 border-t border-stone-200/60">
-                      <input
-                        type="text"
-                        placeholder={
-                          replyingToTarget && replyingToTarget.postId === post.id
-                            ? `Write reply to @${replyingToTarget.authorName}...`
-                            : 'Write an agronomic answer or comment...'
-                        }
-                        value={newCommentText}
-                        onChange={(e) => setNewCommentText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAddComment(post.id);
-                        }}
-                        className="flex-1 px-3 py-2 bg-white rounded-xl text-xs border border-stone-200 focus:outline-none focus:ring-1 focus:ring-[#183D29]"
-                      />
-                      <button
-                        onClick={() => handleAddComment(post.id)}
-                        className="p-2 bg-[#183D29] text-white rounded-xl hover:bg-[#122e1f] transition active:scale-95"
-                        title="Send comment"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                      </button>
                     </div>
                   </div>
                 )}
@@ -1081,7 +1727,7 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
         />
       )}
 
-      {/* Report Modal */}
+      {/* Report Post Modal */}
       {reportingPost && (
         <ReportModal
           isOpen={Boolean(reportingPost)}
@@ -1089,6 +1735,17 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
           targetType="post"
           targetId={reportingPost.id}
           targetTitle={reportingPost.content.slice(0, 60)}
+        />
+      )}
+
+      {/* Report Comment Modal */}
+      {reportingCommentModal && (
+        <ReportModal
+          isOpen={Boolean(reportingCommentModal)}
+          onClose={() => setReportingCommentModal(null)}
+          targetType="comment"
+          targetId={reportingCommentModal.id}
+          targetTitle={`Comment by ${reportingCommentModal.author}: "${reportingCommentModal.text.slice(0, 50)}..."`}
         />
       )}
     </div>

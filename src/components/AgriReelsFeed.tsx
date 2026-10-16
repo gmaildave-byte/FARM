@@ -360,9 +360,9 @@ export const AgriReelsFeed: React.FC<AgriReelsFeedProps> = ({
       <div className="flex items-center justify-between bg-white rounded-3xl p-5 border border-stone-200/90 shadow-2xs">
         <div>
           <h2 className="font-bold text-stone-900 text-lg sm:text-xl flex items-center gap-2 font-serif">
-            <span>🎬 AgriHub Reels & Visual Guides</span>
+            <span>🎬 Clips & Visual Field Guides</span>
             <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              Tap any Reel to Watch
+              Tap any Clip to Watch
             </span>
           </h2>
           <p className="text-xs text-stone-500 mt-0.5">
@@ -371,10 +371,10 @@ export const AgriReelsFeed: React.FC<AgriReelsFeedProps> = ({
         </div>
         <button
           onClick={() => setUploadModalOpen(true)}
-          className="px-4 py-2.5 bg-[#183D29] hover:bg-[#122e1f] text-white rounded-2xl text-xs font-bold flex items-center gap-2 transition shadow-md shrink-0 active:scale-95"
+          className="px-4 py-2.5 bg-[#183D29] hover:bg-[#122e1f] text-white rounded-2xl text-xs font-bold flex items-center gap-2 transition shadow-md shrink-0 active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span className="hidden sm:inline">Post AgriReel</span>
+          <span className="hidden sm:inline">Share Clip</span>
         </button>
       </div>
 
@@ -428,7 +428,7 @@ export const AgriReelsFeed: React.FC<AgriReelsFeedProps> = ({
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <div className="px-4 py-2 rounded-full bg-[#183D29]/90 text-white text-xs font-bold shadow-2xl flex items-center gap-2 border border-emerald-400/40 backdrop-blur-md transform scale-95 group-hover:scale-100 transition-transform">
                   <Play className="w-4 h-4 fill-white" />
-                  <span>Watch Immersive Reel</span>
+                  <span>Watch Clip</span>
                 </div>
               </div>
 

@@ -20,8 +20,9 @@
     <script>
       // Suppress Vite dev server HMR WebSocket proxy errors in preview environments
       (function() {
-        const isWsError = (str) => {
-          if (!str || typeof str !== 'string') return false;
+        const isWsError = (err) => {
+          if (!err) return false;
+          const str = typeof err === 'string' ? err : `${err.message || ''} ${err.stack || ''} ${String(err)}`;
           return str.includes('WebSocket') || 
                  str.includes('closed without opened') || 
                  str.includes('[vite]') || 
@@ -31,7 +32,7 @@
 
         const origConsoleError = console.error;
         console.error = function(...args) {
-          if (args.some(a => isWsError(typeof a === 'string' ? a : (a && a.message) || ''))) {
+          if (args.some(a => isWsError(a))) {
             return;
           }
           origConsoleError.apply(console, args);
@@ -39,15 +40,14 @@
 
         const origConsoleWarn = console.warn;
         console.warn = function(...args) {
-          if (args.some(a => isWsError(typeof a === 'string' ? a : (a && a.message) || ''))) {
+          if (args.some(a => isWsError(a))) {
             return;
           }
           origConsoleWarn.apply(console, args);
         };
 
         window.addEventListener('error', function(event) {
-          const msg = event?.message || event?.error?.message || '';
-          if (isWsError(msg)) {
+          if (isWsError(event?.error) || isWsError(event?.message)) {
             event.preventDefault();
             event.stopImmediatePropagation();
             return true;
@@ -55,8 +55,7 @@
         }, true);
 
         window.addEventListener('unhandledrejection', function(event) {
-          const reason = event?.reason?.message || String(event?.reason || '');
-          if (isWsError(reason)) {
+          if (isWsError(event?.reason)) {
             event.preventDefault();
             event.stopImmediatePropagation();
           }

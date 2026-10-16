@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const primaryNav: { page: Page; label: string }[] = [
     { page: 'home', label: 'Home' },
-    { page: 'community', label: 'Community & Reels' },
+    { page: 'community', label: 'Community' },
     { page: 'messages', label: 'Farmer Chat' },
     { page: 'marketplace', label: 'Marketplace' },
     { page: 'crops', label: 'Crops' },
