@@ -7,6 +7,105 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(() => {
   return {
     plugins: [
+      {
+        name: 'suppress-hmr-client',
+        transformIndexHtml: {
+          order: 'pre',
+          handler() {
+            return [
+              {
+                tag: 'script',
+                injectTo: 'head-prepend',
+                children: `
+                  (function() {
+                    if (typeof window === 'undefined') return;
+                    try {
+                      var RealWebSocket = window.WebSocket;
+                      if (RealWebSocket) {
+                        window.WebSocket = function(url, protocols) {
+                          var isViteHmr = 
+                            protocols === 'vite-hmr' || 
+                            (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1) ||
+                            (typeof url === 'string' && (url.indexOf('vite-hmr') !== -1 || url.indexOf('@vite/client') !== -1));
+                          
+                          if (isViteHmr) {
+                            var mock = {
+                              binaryType: 'blob',
+                              readyState: 1,
+                              send: function() {},
+                              close: function() {},
+                              addEventListener: function(event, cb) {
+                                if (event === 'open') setTimeout(function() { try { cb({ type: 'open' }); } catch(e){} }, 0);
+                              },
+                              removeEventListener: function() {},
+                              dispatchEvent: function() { return true; },
+                              onopen: null,
+                              onmessage: null,
+                              onerror: null,
+                              onclose: null
+                            };
+                            setTimeout(function() {
+                              if (typeof mock.onopen === 'function') {
+                                try { mock.onopen({ type: 'open' }); } catch(e) {}
+                              }
+                            }, 0);
+                            return mock;
+                          }
+                          return new RealWebSocket(url, protocols);
+                        };
+                        window.WebSocket.prototype = RealWebSocket.prototype;
+                      }
+
+                      var isWsError = function(err) {
+                        if (!err) return false;
+                        var str = typeof err === 'string' ? err : ((err.message || '') + ' ' + (err.stack || '') + ' ' + String(err));
+                        return str.indexOf('WebSocket') !== -1 || 
+                               str.indexOf('closed without opened') !== -1 || 
+                               str.indexOf('[vite]') !== -1 || 
+                               str.indexOf('ws://') !== -1 || 
+                               str.indexOf('wss://') !== -1;
+                      };
+
+                      var origErr = console.error;
+                      console.error = function() {
+                        var args = Array.prototype.slice.call(arguments);
+                        for (var i = 0; i < args.length; i++) {
+                          if (isWsError(args[i])) return;
+                        }
+                        origErr.apply(console, args);
+                      };
+
+                      var origWarn = console.warn;
+                      console.warn = function() {
+                        var args = Array.prototype.slice.call(arguments);
+                        for (var i = 0; i < args.length; i++) {
+                          if (isWsError(args[i])) return;
+                        }
+                        origWarn.apply(console, args);
+                      };
+
+                      window.addEventListener('error', function(e) {
+                        if (isWsError(e && (e.error || e.message))) {
+                          e.preventDefault();
+                          e.stopImmediatePropagation();
+                          return true;
+                        }
+                      }, true);
+
+                      window.addEventListener('unhandledrejection', function(e) {
+                        if (isWsError(e && e.reason)) {
+                          e.preventDefault();
+                          e.stopImmediatePropagation();
+                        }
+                      });
+                    } catch (e) {}
+                  })();
+                `,
+              },
+            ];
+          },
+        },
+      },
       react(),
       tailwindcss(),
       VitePWA({
