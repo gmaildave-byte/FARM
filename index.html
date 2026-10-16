@@ -18,21 +18,49 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <script>
-      // Suppress Vite HMR WebSocket proxy closing errors in preview environments
+      // Suppress Vite dev server HMR WebSocket proxy errors in preview environments
       (function() {
+        const isWsError = (str) => {
+          if (!str || typeof str !== 'string') return false;
+          return str.includes('WebSocket') || 
+                 str.includes('closed without opened') || 
+                 str.includes('[vite]') || 
+                 str.includes('ws://') || 
+                 str.includes('wss://');
+        };
+
         const origConsoleError = console.error;
         console.error = function(...args) {
-          if (args[0] && typeof args[0] === 'string' && (args[0].includes('WebSocket') || args[0].includes('[vite] Error: WebSocket closed'))) {
+          if (args.some(a => isWsError(typeof a === 'string' ? a : (a && a.message) || ''))) {
             return;
           }
           origConsoleError.apply(console, args);
         };
+
+        const origConsoleWarn = console.warn;
+        console.warn = function(...args) {
+          if (args.some(a => isWsError(typeof a === 'string' ? a : (a && a.message) || ''))) {
+            return;
+          }
+          origConsoleWarn.apply(console, args);
+        };
+
         window.addEventListener('error', function(event) {
-          if (event.message && (event.message.includes('WebSocket') || event.message.includes('ws://') || event.message.includes('wss://'))) {
+          const msg = event?.message || event?.error?.message || '';
+          if (isWsError(msg)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          const reason = event?.reason?.message || String(event?.reason || '');
+          if (isWsError(reason)) {
             event.preventDefault();
             event.stopImmediatePropagation();
           }
-        }, true);
+        });
       })();
     </script>
   </head>

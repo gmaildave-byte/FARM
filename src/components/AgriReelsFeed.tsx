@@ -259,6 +259,23 @@ export const AgriReelsFeed: React.FC<AgriReelsFeedProps> = ({
   const [newCounty, setNewCounty] = useState('Uasin Gishu');
   const [selectedAudioTitle, setSelectedAudioTitle] = useState('Savanna Sunrise Acoustic — AgriHub Studio');
 
+  // Handle ESC key to dismiss active modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (musicModalOpen) {
+          setMusicModalOpen(false);
+        } else if (uploadModalOpen) {
+          setUploadModalOpen(false);
+        } else if (selectedViewerReelId) {
+          handleCloseReel();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [musicModalOpen, uploadModalOpen, selectedViewerReelId]);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);

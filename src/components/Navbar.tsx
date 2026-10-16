@@ -1,30 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Sprout,
   Search,
   Globe,
   User,
   Menu,
   X,
   ChevronDown,
-  Sparkles,
-  Layers,
   MapPin,
   ShieldCheck,
-  Calculator,
-  ShoppingBag,
-  GraduationCap,
   MessageSquare,
-  HelpCircle,
   Bell,
   CheckCircle2,
-  Download
+  ExternalLink
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { Page, UserRole } from '../types';
 import { PWAInstallButton } from './PWAInstallButton';
 import { AuthModal } from './AuthModal';
+import { AgriHubLogo } from './AgriHubLogo';
 
 interface NavbarProps {
   currentPage: Page;
@@ -66,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   selectedCounty,
   setSelectedCounty,
 }) => {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const {
     user,
     role,
@@ -77,13 +71,17 @@ export const Navbar: React.FC<NavbarProps> = ({
     dismissNotification,
     clearAllNotifications,
   } = useAuth();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState('KES');
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const roleMenuRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const rolesList: { id: UserRole; label: string; desc: string }[] = [
     { id: 'farmer', label: 'Registered Farmer', desc: 'Manage crops, field updates, farm manager' },
@@ -117,19 +115,78 @@ export const Navbar: React.FC<NavbarProps> = ({
     { page: 'about', label: 'About' },
   ];
 
+  // Handle ESC key to close active dropdowns
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setRoleMenuOpen(false);
+        setNotificationsOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (roleMenuRef.current && !roleMenuRef.current.contains(e.target as Node)) {
+        setRoleMenuOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotificationsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Helper to scroll to relevant content smoothly when navigating
+  const handleNotificationClick = (n: (typeof notifications)[0]) => {
+    markNotificationRead(n.id);
+    setNotificationsOpen(false);
+
+    let targetPage: Page = 'home';
+    if (n.type === 'comment' || n.type === 'like' || n.type === 'follow') {
+      targetPage = 'community';
+    } else if (n.type === 'enquiry') {
+      targetPage = 'marketplace';
+    } else if (n.type === 'message') {
+      targetPage = 'messages';
+    } else {
+      targetPage = 'home';
+    }
+
+    setCurrentPage(targetPage);
+
+    // Auto-scroll to content area
+    setTimeout(() => {
+      window.scrollTo({ top: 120, behavior: 'smooth' });
+    }, 150);
+  };
+
   return (
-    <header className="sticky top-0 z-40 bg-white shadow-xs border-b border-stone-200">
-      {/* Top Utility Ribbon */}
-      <div className="bg-[#183D29] text-[#FAF7F0] text-xs py-1 px-3 sm:px-8 border-b border-emerald-950 w-full overflow-x-hidden">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2">
-          {/* Location & International Currency Selector */}
-          <div className="flex items-center gap-1.5 min-w-0">
-            <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-emerald-200 hidden sm:inline shrink-0">Region:</span>
+    <header className="sticky top-0 z-40 w-full bg-white shadow-xs border-b border-stone-200 isolate">
+      {/* 1. UPPER HORIZONTAL NAVIGATION BAR (Dark Emerald Utility Ribbon) */}
+      <div className="bg-[#183D29] text-[#FAF7F0] text-xs border-b border-emerald-950/80 w-full relative z-30">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-2">
+          {/* Location & International Currency Selectors */}
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <div className="flex items-center gap-1 shrink-0 text-emerald-300">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span className="text-emerald-200 hidden md:inline text-[11px] font-medium">Region:</span>
+            </div>
+
+            <label htmlFor="county-select" className="sr-only">
+              Select Kenyan County
+            </label>
             <select
+              id="county-select"
               value={selectedCounty}
               onChange={(e) => setSelectedCounty(e.target.value)}
-              className="bg-[#112d1e] text-[#FAF7F0] border border-emerald-900 rounded px-1.5 py-0.5 text-[11px] sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400 max-w-[125px] sm:max-w-none truncate"
+              className="bg-[#112d1e] text-[#FAF7F0] border border-emerald-800/80 rounded-md px-1.5 py-0.5 text-[11px] sm:text-xs font-medium focus:outline-hidden focus:ring-1 focus:ring-emerald-400 max-w-[115px] sm:max-w-[160px] truncate cursor-pointer hover:bg-emerald-900/60 transition"
+              title="Filter agricultural conditions by county"
             >
               {kenyanCounties.map((c) => (
                 <option key={c} value={c} className="bg-[#183D29] text-white">
@@ -137,11 +194,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </option>
               ))}
             </select>
-            <span className="text-emerald-700 hidden md:inline">|</span>
+
+            <span className="text-emerald-700 hidden lg:inline">|</span>
+
+            {/* Currency Selector (compact on mobile) */}
+            <label htmlFor="currency-select" className="sr-only">
+              Select Currency
+            </label>
             <select
+              id="currency-select"
               value={selectedCurrency}
               onChange={(e) => setSelectedCurrency(e.target.value)}
-              className="bg-[#112d1e] text-[#FAF7F0] border border-emerald-900 rounded px-1.5 py-0.5 text-[11px] sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400 hidden sm:inline"
+              className="bg-[#112d1e] text-[#FAF7F0] border border-emerald-800/80 rounded-md px-1.5 py-0.5 text-[11px] sm:text-xs font-medium focus:outline-hidden focus:ring-1 focus:ring-emerald-400 hidden sm:inline cursor-pointer hover:bg-emerald-900/60 transition"
               title="International Currency Conversion"
             >
               <option value="KES">Currency: KES (Kenya)</option>
@@ -154,57 +218,94 @@ export const Navbar: React.FC<NavbarProps> = ({
             </select>
           </div>
 
-          {/* Right Utility Controls */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Language Switcher */}
-            <div className="flex items-center gap-1 bg-[#112d1e] rounded px-2 py-0.5 border border-emerald-900">
-              <Globe className="w-3 h-3 text-emerald-400" />
+          {/* Right Utility Controls: Language & Role Switcher */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Bilingual English / Kiswahili Switcher */}
+            <div
+              className="flex items-center gap-0.5 bg-[#112d1e] rounded-md px-1.5 py-0.5 border border-emerald-800/80 text-[11px]"
+              role="group"
+              aria-label="Language selection"
+            >
+              <Globe className="w-3 h-3 text-emerald-400 shrink-0 mr-0.5" />
               <button
+                type="button"
                 onClick={() => setLanguage('en')}
-                className={`px-1 rounded font-medium ${language === 'en' ? 'text-white bg-emerald-700' : 'text-emerald-300 hover:text-white'}`}
+                aria-pressed={language === 'en'}
+                className={`px-1.5 py-0.5 rounded text-[11px] font-semibold transition ${
+                  language === 'en'
+                    ? 'text-white bg-emerald-700 shadow-2xs'
+                    : 'text-emerald-300 hover:text-white'
+                }`}
               >
                 EN
               </button>
               <span className="text-emerald-700">/</span>
               <button
+                type="button"
                 onClick={() => setLanguage('sw')}
-                className={`px-1 rounded font-medium ${language === 'sw' ? 'text-white bg-emerald-700' : 'text-emerald-300 hover:text-white'}`}
+                aria-pressed={language === 'sw'}
+                className={`px-1.5 py-0.5 rounded text-[11px] font-semibold transition ${
+                  language === 'sw'
+                    ? 'text-white bg-emerald-700 shadow-2xs'
+                    : 'text-emerald-300 hover:text-white'
+                }`}
               >
                 SW
               </button>
             </div>
 
-            {/* Quick Role Switcher */}
-            <div className="relative">
+            {/* Role Simulator Dropdown */}
+            <div className="relative" ref={roleMenuRef}>
               <button
+                type="button"
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                className="flex items-center gap-1.5 bg-[#112d1e] text-emerald-100 border border-emerald-900 rounded px-2.5 py-0.5 hover:bg-emerald-900 transition"
+                aria-expanded={roleMenuOpen}
+                aria-haspopup="true"
+                className="flex items-center gap-1 sm:gap-1.5 bg-[#112d1e] text-emerald-100 border border-emerald-800/80 rounded-md px-2 py-0.5 hover:bg-emerald-900 transition text-[11px] sm:text-xs font-medium focus-visible:ring-1 focus-visible:ring-emerald-400"
+                title="Switch active user role"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
-                <span className="font-semibold text-white capitalize">{role}</span>
-                <ChevronDown className="w-3 h-3 text-emerald-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                <span className="font-semibold text-white capitalize truncate max-w-[80px] sm:max-w-none">
+                  {role}
+                </span>
+                <ChevronDown className="w-3 h-3 text-emerald-400 shrink-0" />
               </button>
 
               {roleMenuOpen && (
-                <div className="absolute right-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-stone-200 py-2 z-50 text-stone-800 animate-in fade-in">
-                  <div className="px-3 py-1.5 border-b border-stone-100 text-[11px] font-bold uppercase text-stone-500">
-                    Active User Role Simulator
+                <div
+                  className="absolute right-0 top-full mt-1.5 w-64 max-w-[calc(100vw-24px)] bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-50 text-stone-800 animate-in fade-in zoom-in-95"
+                  role="menu"
+                >
+                  <div className="px-3 py-1.5 border-b border-stone-100 text-[10px] font-bold uppercase tracking-wider text-stone-500 flex items-center justify-between">
+                    <span>Role Simulator</span>
+                    <span className="text-emerald-700 font-semibold lowercase">Adams Kering</span>
                   </div>
-                  {rolesList.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => {
-                        setRole(r.id);
-                        setRoleMenuOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs hover:bg-stone-50 transition flex flex-col ${
-                        role === r.id ? 'bg-emerald-50 text-emerald-900 font-semibold' : ''
-                      }`}
-                    >
-                      <span className="font-medium text-stone-900">{r.label}</span>
-                      <span className="text-[10px] text-stone-500 leading-tight">{r.desc}</span>
-                    </button>
-                  ))}
+                  <div className="max-h-60 overflow-y-auto divide-y divide-stone-100">
+                    {rolesList.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setRole(r.id);
+                          setRoleMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-xs hover:bg-stone-50 transition flex flex-col ${
+                          role === r.id ? 'bg-emerald-50/70 text-emerald-900 font-semibold' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-stone-900">{r.label}</span>
+                          {role === r.id && (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                          )}
+                        </div>
+                        <span className="text-[10px] text-stone-500 leading-tight mt-0.5">
+                          {r.desc}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -212,74 +313,82 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 w-full">
-        {/* Brand Logo & Tagline */}
+      {/* 2. LOWER HORIZONTAL NAVIGATION BAR (White Brand & Primary Controls) */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-2 sm:gap-4 w-full relative z-20">
+        {/* Brand Logo & Wordmark */}
         <div
           onClick={() => setCurrentPage('home')}
-          className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group shrink-0 min-w-fit"
+          className="cursor-pointer group shrink-0 min-w-0"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              setCurrentPage('home');
+            }
+          }}
+          aria-label="AgriHub Home"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#183D29] to-[#0D2818] flex items-center justify-center text-white shadow-sm group-hover:from-[#122e1f] group-hover:to-[#08170e] transition shrink-0 ring-1 ring-emerald-500/20">
-            <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 group-hover:scale-110 transition-transform" />
+          {/* Main Logo on Desktop, Compact on Small Mobile */}
+          <div className="hidden sm:block">
+            <AgriHubLogo size="md" showTagline={true} />
           </div>
-          <div className="min-w-0">
-            <div className="text-base sm:text-xl font-bold text-stone-900 tracking-tight leading-none flex items-center gap-1 font-serif">
-              <span>Agri</span>
-              <span className="text-emerald-700">Hub</span>
-            </div>
-            <div className="text-[11px] text-stone-500 font-medium hidden sm:block mt-0.5 truncate">
-              Grow Knowledge • Share Progress • Build the Future
-            </div>
+          <div className="sm:hidden">
+            <AgriHubLogo size="sm" showTagline={false} />
           </div>
         </div>
 
-        {/* Global Search Bar (Desktop/Tablet) */}
+        {/* Global Search Bar (Desktop & Tablet) */}
         <div className="flex-1 max-w-md hidden md:block">
           <button
+            type="button"
             onClick={openSearchModal}
-            className="w-full flex items-center justify-between px-3.5 py-2 bg-stone-100/90 hover:bg-stone-100 text-stone-700 rounded-xl border border-stone-200 text-xs sm:text-sm transition text-left cursor-text"
+            className="w-full flex items-center justify-between px-3.5 py-2 bg-stone-100/90 hover:bg-stone-100 text-stone-700 rounded-xl border border-stone-200 text-xs sm:text-sm transition text-left cursor-text focus-visible:ring-2 focus-visible:ring-[#183D29]"
+            aria-label="Open global search dialog"
           >
-            <span className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-emerald-800" />
-              <span>Search crops, animals, pests, tools, prices...</span>
+            <span className="flex items-center gap-2 truncate">
+              <Search className="w-4 h-4 text-emerald-800 shrink-0" />
+              <span className="truncate">Search crops, pests, calculators, prices...</span>
             </span>
-            <kbd className="hidden lg:inline-block text-[10px] bg-white border border-stone-300 rounded px-1.5 py-0.5 text-stone-700 font-mono">
+            <kbd className="hidden lg:inline-block text-[10px] bg-white border border-stone-300 rounded px-1.5 py-0.5 text-stone-600 font-mono shadow-2xs shrink-0 ml-2">
               Search
             </kbd>
           </button>
         </div>
 
-        {/* Right Action Controls */}
-        <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
+        {/* Right Action Controls: Search (Mobile), Messages, Notifications, Profile, Hamburger */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Mobile Search Button */}
           <button
+            type="button"
             onClick={openSearchModal}
-            className="md:hidden p-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition"
-            aria-label="Search"
+            className="md:hidden p-2 text-stone-700 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition focus-visible:ring-2 focus-visible:ring-[#183D29]"
+            aria-label="Search AgriHub"
             title="Search AgriHub"
           >
             <Search className="w-5 h-5" />
           </button>
 
-          {/* Direct Farmer Messaging / Chat Shortcut */}
+          {/* Farmer Chat / Direct Messaging */}
           <button
+            type="button"
             onClick={() => setCurrentPage('messages')}
-            className={`p-2 rounded-xl transition relative ${
+            className={`p-2 rounded-xl transition relative focus-visible:ring-2 focus-visible:ring-[#183D29] ${
               currentPage === 'messages'
                 ? 'bg-[#183D29] text-white shadow-xs'
                 : 'text-stone-700 hover:text-[#183D29] hover:bg-stone-100'
             }`}
             title="Farmer Direct Messaging & Expert Inquiries"
-            aria-label="Farmer Chat"
+            aria-label="Farmer Chat and Messages"
           >
             <MessageSquare className="w-5 h-5" />
           </button>
 
           {/* Notifications Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={notifRef}>
             <button
+              type="button"
               onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className={`p-2 rounded-xl relative transition focus:outline-none focus:ring-2 focus:ring-[#183D29] ${
+              className={`p-2 rounded-xl relative transition focus-visible:ring-2 focus-visible:ring-[#183D29] ${
                 notificationsOpen
                   ? 'bg-emerald-50 text-[#183D29]'
                   : 'text-stone-700 hover:text-[#183D29] hover:bg-stone-100'
@@ -298,19 +407,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {notificationsOpen && (
               <>
-                {/* Backdrop to prevent click-through and close cleanly */}
+                {/* Backdrop on mobile for clean dismiss */}
                 <div
-                  className="fixed inset-0 z-40 bg-stone-900/30 backdrop-blur-2xs"
+                  className="fixed inset-0 z-40 bg-stone-900/20 backdrop-blur-2xs sm:hidden"
                   onClick={() => setNotificationsOpen(false)}
                 />
 
-                {/* Notification Panel: fixed and perfectly centered on mobile (no left clipping!), anchored on desktop */}
+                {/* Dropdown panel */}
                 <div
-                  className="fixed left-3 right-3 top-16 max-w-sm sm:max-w-none sm:w-96 mx-auto sm:mx-0 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 py-3 z-50 animate-in fade-in duration-150 overflow-hidden flex flex-col"
-                  style={{ maxHeight: 'calc(80vh)' }}
+                  className="fixed left-3 right-3 top-28 sm:top-full sm:mt-2 sm:absolute sm:inset-auto sm:right-0 w-auto sm:w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 py-2.5 z-50 animate-in fade-in zoom-in-95 overflow-hidden flex flex-col max-h-[75vh]"
+                  role="region"
+                  aria-label="Notifications Panel"
                 >
                   {/* Header */}
-                  <div className="px-4 pb-2.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/80 shrink-0">
+                  <div className="px-4 pb-2 border-b border-stone-100 flex items-center justify-between bg-stone-50/80 shrink-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-stone-900 uppercase font-serif tracking-tight">
                         Notifications
@@ -324,6 +434,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="flex items-center gap-2 text-xs">
                       {unreadCount > 0 && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             markAllNotificationsRead();
@@ -334,10 +445,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </button>
                       )}
                       <button
+                        type="button"
                         onClick={() => setNotificationsOpen(false)}
-                        className="px-2 py-1 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold flex items-center gap-1 transition"
-                        title="Done reading notifications"
-                        aria-label="Done reading notifications"
+                        className="px-2 py-1 rounded-md bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold flex items-center gap-1 transition"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
                         <span>Done</span>
@@ -345,7 +455,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </div>
 
-                  {/* List */}
+                  {/* Notification List */}
                   <div className="flex-1 overflow-y-auto divide-y divide-stone-100 overscroll-contain">
                     {notifications.length === 0 ? (
                       <div className="p-8 text-center space-y-2">
@@ -361,20 +471,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       notifications.map((n) => (
                         <div
                           key={n.id}
-                          onClick={() => {
-                            markNotificationRead(n.id);
-                            // Deep link to related screen
-                            if (n.type === 'comment' || n.type === 'like' || n.type === 'follow') {
-                              setCurrentPage('community');
-                            } else if (n.type === 'enquiry') {
-                              setCurrentPage('marketplace');
-                            } else if (n.type === 'message') {
-                              setCurrentPage('messages');
-                            } else {
-                              setCurrentPage('home');
-                            }
-                            setNotificationsOpen(false);
-                          }}
+                          onClick={() => handleNotificationClick(n)}
                           className={`p-3 text-xs hover:bg-stone-50 transition cursor-pointer flex items-start gap-3 group ${
                             !n.read ? 'bg-emerald-50/50' : 'bg-white'
                           }`}
@@ -396,6 +493,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                             </p>
                           </div>
                           <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               dismissNotification(n.id);
@@ -410,10 +508,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </div>
 
-                  {/* Footer */}
+                  {/* Panel Footer */}
                   {notifications.length > 0 && (
-                    <div className="px-4 py-2.5 border-t border-stone-100 bg-stone-50/70 flex items-center justify-between text-[11px] text-stone-500 shrink-0">
+                    <div className="px-4 py-2 border-t border-stone-100 bg-stone-50/70 flex items-center justify-between text-[11px] text-stone-500 shrink-0">
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           markAllNotificationsRead();
@@ -425,6 +524,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <span>Mark all read & Close</span>
                       </button>
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           clearAllNotifications();
@@ -440,15 +540,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* User Profile / Sign In Link */}
+          {/* User Profile / Account Switcher */}
           <button
+            type="button"
             onClick={() => setCurrentPage('profile')}
-            className={`flex items-center gap-1.5 p-1 sm:px-3 sm:py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 p-1 sm:px-3 sm:py-1.5 rounded-xl text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-[#183D29] ${
               currentPage === 'profile'
                 ? 'bg-[#183D29] text-white shadow-xs'
                 : 'text-stone-700 hover:bg-stone-100 border border-stone-200'
             }`}
             title="User Profile & Settings"
+            aria-label="User Profile"
           >
             <div className="w-6 h-6 rounded-full overflow-hidden bg-[#183D29] text-white flex items-center justify-center font-bold text-[10px]">
               {user?.avatar ? (
@@ -460,31 +562,37 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline">{user?.name?.split(' ')[0] || 'Profile'}</span>
           </button>
 
-          {/* PWA Install App Button (Desktop/Tablet) */}
+          {/* PWA Install App (Desktop & Tablet) */}
           <div className="hidden sm:block">
             <PWAInstallButton variant="nav" />
           </div>
 
-          {/* Mobile Menu Hamburger */}
+          {/* Mobile Drawer Hamburger */}
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition"
-            aria-label="Toggle navigation menu"
+            className="lg:hidden p-2 text-stone-700 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition focus-visible:ring-2 focus-visible:ring-[#183D29]"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
-      {/* Primary Category Desktop Ribbon */}
-      <nav className="hidden lg:block border-t border-stone-100 bg-[#FAF7F0] text-xs font-medium text-stone-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between overflow-x-auto no-scrollbar py-1">
+      {/* 3. DESKTOP PRIMARY CATEGORY RIBBON */}
+      <nav
+        className="hidden lg:block border-t border-stone-100 bg-[#FAF7F0] text-xs font-medium text-stone-700 relative z-10"
+        aria-label="Primary Categories Navigation"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto no-scrollbar py-1">
           <div className="flex items-center gap-1 shrink-0">
             {primaryNav.map((item) => (
               <button
                 key={item.page}
+                type="button"
                 onClick={() => setCurrentPage(item.page)}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
+                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors focus-visible:ring-1 focus-visible:ring-[#183D29] ${
                   currentPage === item.page
                     ? 'bg-[#183D29] text-white font-bold shadow-xs'
                     : 'hover:text-[#183D29] hover:bg-stone-200/60'
@@ -497,11 +605,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </nav>
 
-      {/* Mobile Drawer Menu */}
+      {/* 4. MOBILE DRAWER MENU */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-stone-200 px-4 py-4 space-y-3 max-h-[80vh] overflow-y-auto">
-          {/* Quick Sign In / Switch Account Button */}
+        <div
+          className="lg:hidden bg-white border-t border-stone-200 px-4 py-4 space-y-3 max-h-[82vh] overflow-y-auto shadow-xl animate-in slide-in-from-top-2 duration-200"
+          role="dialog"
+          aria-label="Mobile Navigation Menu"
+        >
+          {/* Quick Sign In / Switch Account */}
           <button
+            type="button"
             onClick={() => {
               setMobileMenuOpen(false);
               setAuthModalOpen(true);
@@ -515,7 +628,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-[11px] text-emerald-800">Switch &rarr;</span>
           </button>
 
-          {/* PWA Install Button in Drawer */}
+          {/* PWA Install Button inside Drawer */}
           <div className="pb-1">
             <PWAInstallButton
               variant="drawer"
@@ -523,33 +636,34 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
           </div>
 
-          <div className="text-xs font-bold uppercase tracking-wider text-stone-500 px-3 py-1">
-            Complete Farming Hub
+          <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-3 py-1">
+            Platform Navigation
           </div>
-          {primaryNav.map((item) => (
-            <button
-              key={item.page}
-              onClick={() => {
-                setCurrentPage(item.page);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
-                currentPage === item.page
-                  ? 'bg-[#183D29] text-white font-bold'
-                  : 'text-stone-700 hover:bg-stone-100'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {primaryNav.map((item) => (
+              <button
+                key={item.page}
+                type="button"
+                onClick={() => {
+                  setCurrentPage(item.page);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition ${
+                  currentPage === item.page
+                    ? 'bg-[#183D29] text-white font-bold shadow-2xs'
+                    : 'text-stone-700 hover:bg-stone-100'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Auth Modal for Sign In & Account Registration */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-      />
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </header>
   );
 };

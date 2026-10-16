@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { FarmProvider } from './context/FarmContext';
@@ -37,63 +38,9 @@ import { CreateActionModal } from './components/CreateActionModal';
 import type { Page } from './types';
 import { ArrowLeft } from 'lucide-react';
 
-const VALID_PAGES: Page[] = [
-  'home',
-  'explore',
-  'crops',
-  'crop-detail',
-  'livestock',
-  'soil-water',
-  'pests',
-  'weather',
-  'farm-manager',
-  'calculators',
-  'markets',
-  'marketplace',
-  'marketplace-create',
-  'social-feed',
-  'community',
-  'reels',
-  'profile',
-  'messages',
-  'notifications',
-  'suppliers',
-  'sustainable',
-  'learning',
-  'expert',
-  'ai-assistant',
-  'opportunities',
-  'farm-business',
-  'admin-cms',
-  'about',
-  'events',
-  'discover',
-  'legal',
-];
+function AppContent() {
+  const { currentPage, navigateTo, goBack, activeOverlay, openOverlay, closeOverlay } = useNavigation();
 
-const parsePageFromHash = (hash: string): Page => {
-  if (!hash) return 'home';
-  const clean = hash.replace(/^#\/?/, '').split('?')[0].split('/')[0];
-  if (clean.startsWith('reel-')) return 'reels';
-  if (clean === 'reels') return 'reels';
-  if (VALID_PAGES.includes(clean as Page)) {
-    return clean as Page;
-  }
-  return 'home';
-};
-
-export default function App() {
-  const scrollMapRef = useRef<Record<string, number>>({});
-
-  const [currentPage, setCurrentPage] = useState<Page>(() => {
-    if (typeof window !== 'undefined' && window.location.hash) {
-      return parsePageFromHash(window.location.hash);
-    }
-    return 'home';
-  });
-
-  const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedCounty, setSelectedCounty] = useState<string>('Uasin Gishu');
   const [activeCalcId, setActiveCalcId] = useState<number | undefined>(undefined);
 
@@ -101,123 +48,25 @@ export default function App() {
     if (toolId && page === 'calculators') {
       setActiveCalcId(toolId);
     }
-    navigate(page);
-  };
-
-  // Navigate to target page and maintain browser history stack
-  const navigate = (nextPage: Page, options?: { replace?: boolean }) => {
-    // Record scroll position for current page before leaving
-    if (typeof window !== 'undefined') {
-      scrollMapRef.current[currentPage] = window.scrollY;
-    }
-
-    if (nextPage === currentPage) {
-      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-      return;
-    }
-
-    const newHash = '#' + nextPage;
-    if (options?.replace) {
-      window.history.replaceState({ page: nextPage }, '', newHash);
-    } else {
-      window.history.pushState({ page: nextPage }, '', newHash);
-    }
-
-    setCurrentPage(nextPage);
-
-    // If restoring previous scroll position for target page
-    const savedScrollY = scrollMapRef.current[nextPage] || 0;
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
-    });
-  };
-
-  // Safe backward navigation
-  const goBack = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      window.history.back();
-    } else {
-      navigate('home');
-    }
-  };
-
-  // Open modal with back-dismiss capability
-  const handleOpenSearchModal = () => {
-    try {
-      window.history.pushState({ modal: 'search', page: currentPage }, '', window.location.hash);
-    } catch {}
-    setSearchModalOpen(true);
-  };
-
-  const handleCloseSearchModal = () => {
-    setSearchModalOpen(false);
-    if (window.history.state?.modal === 'search') {
-      window.history.back();
-    }
-  };
-
-  const handleOpenCreateModal = () => {
-    try {
-      window.history.pushState({ modal: 'create', page: currentPage }, '', window.location.hash);
-    } catch {}
-    setCreateModalOpen(true);
-  };
-
-  const handleCloseCreateModal = () => {
-    setCreateModalOpen(false);
-    if (window.history.state?.modal === 'create') {
-      window.history.back();
-    }
+    navigateTo(page);
   };
 
   const handleCreateSelect = (action: 'post' | 'listing' | 'ask' | 'verify') => {
-    setCreateModalOpen(false);
+    closeOverlay('create');
     if (action === 'post') {
-      navigate('community');
+      navigateTo('community');
     } else if (action === 'listing') {
-      navigate('marketplace');
+      navigateTo('marketplace');
     } else if (action === 'ask') {
-      navigate('expert');
+      navigateTo('expert');
     } else if (action === 'verify') {
-      navigate('profile');
+      navigateTo('profile');
     }
   };
 
-  // Listen for browser Back/Forward (popstate)
-  useEffect(() => {
-    // Ensure initial history state is set with { page: currentPage }
-    if (!window.history.state?.page) {
-      window.history.replaceState({ page: currentPage }, '', window.location.hash || '#home');
-    }
-
-    const handlePopState = (event: PopStateEvent) => {
-      // 1. If an active modal is open, dismiss it first
-      if (searchModalOpen) {
-        setSearchModalOpen(false);
-        return;
-      }
-      if (createModalOpen) {
-        setCreateModalOpen(false);
-        return;
-      }
-
-      // 2. Otherwise route to the popped page
-      const targetPage = event.state?.page || parsePageFromHash(window.location.hash);
-      setCurrentPage(targetPage);
-
-      const savedScrollY = scrollMapRef.current[targetPage] || 0;
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
-      });
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [searchModalOpen, createModalOpen, currentPage]);
-
   const handleSelectSearchResult = (page: Page) => {
-    setSearchModalOpen(false);
-    navigate(page);
+    closeOverlay('search');
+    navigateTo(page);
   };
 
   const renderCurrentContent = (isMobile = false) => {
@@ -225,8 +74,8 @@ export default function App() {
       case 'home':
         return (
           <HomePage
-            setCurrentPage={navigate}
-            openSearchModal={handleOpenSearchModal}
+            setCurrentPage={navigateTo}
+            openSearchModal={() => openOverlay('search')}
             selectedCounty={selectedCounty}
           />
         );
@@ -235,7 +84,7 @@ export default function App() {
           <CommunityPage
             isMobileFrame={isMobile}
             initialMode="reels"
-            onNavigateToProfile={() => navigate('profile')}
+            onNavigateToProfile={() => navigateTo('profile')}
             onNavigateToPage={navigateToTool}
           />
         );
@@ -245,16 +94,16 @@ export default function App() {
           <CommunityPage
             isMobileFrame={isMobile}
             initialMode="feed"
-            onNavigateToProfile={() => navigate('profile')}
+            onNavigateToProfile={() => navigateTo('profile')}
             onNavigateToPage={navigateToTool}
           />
         );
       case 'messages':
-        return <MessagesPage setCurrentPage={navigate} />;
+        return <MessagesPage setCurrentPage={navigateTo} />;
       case 'marketplace':
         return (
           <MarketplacePage
-            onSelectSellerProfile={() => navigate('profile')}
+            onSelectSellerProfile={() => navigateTo('profile')}
           />
         );
       case 'events':
@@ -300,7 +149,7 @@ export default function App() {
                 <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
             )}
-            <SoilWaterPage setCurrentPage={navigate} />
+            <SoilWaterPage setCurrentPage={navigateTo} />
           </div>
         );
       case 'pests':
@@ -373,8 +222,8 @@ export default function App() {
       case 'discover':
         return (
           <DiscoverPage
-            setCurrentPage={navigate}
-            openSearchModal={handleOpenSearchModal}
+            setCurrentPage={navigateTo}
+            openSearchModal={() => openOverlay('search')}
             selectedCounty={selectedCounty}
           />
         );
@@ -383,8 +232,8 @@ export default function App() {
       default:
         return (
           <HomePage
-            setCurrentPage={navigate}
-            openSearchModal={handleOpenSearchModal}
+            setCurrentPage={navigateTo}
+            openSearchModal={() => openOverlay('search')}
             selectedCounty={selectedCounty}
           />
         );
@@ -392,50 +241,58 @@ export default function App() {
   };
 
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <FarmProvider>
-          <div className="min-h-screen bg-[#F4F1EA] text-stone-900 font-sans flex flex-col selection:bg-emerald-200 selection:text-emerald-950 w-full overflow-x-hidden">
-            {/* Main Responsive Experience */}
-            <div className="flex-1 flex flex-col w-full min-w-0">
-              <Navbar
-                currentPage={currentPage}
-                setCurrentPage={navigate}
-                openSearchModal={handleOpenSearchModal}
-                selectedCounty={selectedCounty}
-                setSelectedCounty={setSelectedCounty}
-              />
+    <div className="min-h-screen bg-[#F4F1EA] text-stone-900 font-sans flex flex-col selection:bg-emerald-200 selection:text-emerald-950 w-full overflow-x-hidden">
+      {/* Main Responsive Experience */}
+      <div className="flex-1 flex flex-col w-full min-w-0">
+        <Navbar
+          currentPage={currentPage}
+          setCurrentPage={navigateTo}
+          openSearchModal={() => openOverlay('search')}
+          selectedCounty={selectedCounty}
+          setSelectedCounty={setSelectedCounty}
+        />
 
-              <main className="flex-1 max-w-7xl mx-auto w-full px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-20 md:pb-12 min-w-0 overflow-x-hidden">
-                {renderCurrentContent(false)}
-              </main>
+        <main className="flex-1 max-w-7xl mx-auto w-full px-3.5 sm:px-6 lg:px-8 pt-3 sm:pt-5 pb-24 md:pb-14 min-w-0 overflow-x-hidden">
+          {renderCurrentContent(false)}
+        </main>
 
-              <Footer setCurrentPage={navigate} />
-            </div>
+        <Footer setCurrentPage={navigateTo} />
+      </div>
 
-            {/* Native Mobile Bottom Navigation */}
-            <MobileBottomNav
-              currentPage={currentPage}
-              setCurrentPage={navigate}
-              onCreateClick={handleOpenCreateModal}
-            />
+      {/* Native Mobile Bottom Navigation */}
+      <MobileBottomNav
+        currentPage={currentPage}
+        setCurrentPage={navigateTo}
+        onCreateClick={() => openOverlay('create')}
+      />
 
-            {/* Global Search Modal */}
-            <GlobalSearchModal
-              isOpen={searchModalOpen}
-              onClose={handleCloseSearchModal}
-              onSelectResult={handleSelectSearchResult}
-            />
+      {/* Global Search Modal */}
+      <GlobalSearchModal
+        isOpen={activeOverlay === 'search'}
+        onClose={() => closeOverlay('search')}
+        onSelectResult={handleSelectSearchResult}
+      />
 
-            {/* Mobile Create Action Modal */}
-            <CreateActionModal
-              isOpen={createModalOpen}
-              onClose={handleCloseCreateModal}
-              onSelectAction={handleCreateSelect}
-            />
-          </div>
-        </FarmProvider>
-      </AuthProvider>
-    </LanguageProvider>
+      {/* Mobile Create Action Modal */}
+      <CreateActionModal
+        isOpen={activeOverlay === 'create'}
+        onClose={() => closeOverlay('create')}
+        onSelectAction={handleCreateSelect}
+      />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <NavigationProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <FarmProvider>
+            <AppContent />
+          </FarmProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </NavigationProvider>
   );
 }

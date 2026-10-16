@@ -13,6 +13,7 @@ import {
   Share2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigation } from '../context/NavigationContext';
 
 export interface FarmStory {
   id: string;
@@ -98,6 +99,7 @@ interface AgriStoriesBarProps {
 
 export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
   const { user } = useAuth();
+  const { openOverlay, closeOverlay, activeOverlay } = useNavigation();
   const [stories, setStories] = useState<FarmStory[]>(initialFarmStories);
   const [activeStoryIdx, setActiveStoryIdx] = useState<number | null>(null);
   const [storyProgress, setStoryProgress] = useState(0);
@@ -115,6 +117,34 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
 
   const activeStory = activeStoryIdx !== null ? stories[activeStoryIdx] : null;
 
+  // Sync with browser back navigation via NavigationContext activeOverlay
+  useEffect(() => {
+    if (activeOverlay !== 'story-viewer' && activeStoryIdx !== null) {
+      setActiveStoryIdx(null);
+    }
+    if (activeOverlay !== 'new-story' && newStoryModalOpen) {
+      setNewStoryModalOpen(false);
+    }
+  }, [activeOverlay, activeStoryIdx, newStoryModalOpen]);
+
+  // Handle ESC key to close active story or modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (activeStoryIdx !== null) {
+          closeOverlay('story-viewer');
+          setActiveStoryIdx(null);
+        }
+        if (newStoryModalOpen) {
+          closeOverlay('new-story');
+          setNewStoryModalOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeStoryIdx, newStoryModalOpen, closeOverlay]);
+
   // Auto-advance progress timer for Instagram-style story viewer
   useEffect(() => {
     if (activeStoryIdx === null) {
@@ -131,6 +161,7 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
             setActiveStoryIdx(activeStoryIdx + 1);
             return 0;
           } else {
+            closeOverlay('story-viewer');
             setActiveStoryIdx(null);
             return 0;
           }
@@ -140,7 +171,7 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [activeStoryIdx, stories.length]);
+  }, [activeStoryIdx, stories.length, closeOverlay]);
 
   const handleNextStory = () => {
     if (activeStoryIdx !== null) {
@@ -221,7 +252,10 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
         <div className="flex items-center gap-4 min-w-max">
           {/* Add Story Button (Self) */}
           <button
-            onClick={() => setNewStoryModalOpen(true)}
+            onClick={() => {
+              openOverlay('new-story');
+              setNewStoryModalOpen(true);
+            }}
             className="flex flex-col items-center gap-1.5 focus:outline-none group select-none"
           >
             <div className="relative">
@@ -247,7 +281,10 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
           {stories.map((story, idx) => (
             <button
               key={story.id}
-              onClick={() => setActiveStoryIdx(idx)}
+              onClick={() => {
+                openOverlay('story-viewer');
+                setActiveStoryIdx(idx);
+              }}
               className="flex flex-col items-center gap-1.5 focus:outline-none group select-none transition active:scale-95"
             >
               <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full p-[2.5px] bg-gradient-to-tr from-amber-400 via-emerald-600 to-[#183D29] group-hover:scale-105 transition duration-200">
@@ -331,7 +368,10 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
                 </div>
 
                 <button
-                  onClick={() => setActiveStoryIdx(null)}
+                  onClick={() => {
+                    closeOverlay('story-viewer');
+                    setActiveStoryIdx(null);
+                  }}
                   className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition"
                   aria-label="Close story"
                 >
@@ -405,7 +445,10 @@ export const AgriStoriesBar: React.FC<AgriStoriesBarProps> = () => {
                 </div>
               </div>
               <button
-                onClick={() => setNewStoryModalOpen(false)}
+                onClick={() => {
+                  closeOverlay('new-story');
+                  setNewStoryModalOpen(false);
+                }}
                 className="p-1 rounded-lg text-stone-400 hover:text-stone-700"
               >
                 <X className="w-4 h-4" />

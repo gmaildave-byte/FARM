@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 import { kenyanCounties } from './Navbar';
+import { AgriHubLogo } from './AgriHubLogo';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -30,6 +31,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const { login } = useAuth();
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>(initialMode);
+
+  // ESC key listener
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -88,9 +101,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Header */}
         <div className="bg-[#183D29] text-[#FAF7F0] px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-800 flex items-center justify-center text-emerald-200">
-              <Sprout className="w-5 h-5" />
-            </div>
+            <AgriHubLogo size="xs" variant="icon-only" />
             <div>
               <h3 className="font-bold text-base tracking-tight font-serif">
                 {mode === 'login' && 'Sign in to AgriHub'}

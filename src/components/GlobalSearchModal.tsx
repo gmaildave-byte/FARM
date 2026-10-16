@@ -20,6 +20,18 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Handle ESC key to close search modal
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const results = useMemo(() => {
     if (!searchTerm.trim() || searchTerm.length < 2) return [];
 
