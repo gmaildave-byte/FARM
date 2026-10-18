@@ -3,6 +3,7 @@ import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { FarmProvider } from './context/FarmContext';
+import { RealtimeProvider } from './context/RealtimeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
@@ -241,7 +242,7 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA] text-stone-900 font-sans flex flex-col selection:bg-emerald-200 selection:text-emerald-950 w-full overflow-x-hidden">
+    <div className="min-h-screen bg-[#F4F1EA] text-stone-900 font-sans flex flex-col selection:bg-emerald-200 selection:text-emerald-950 w-full overflow-x-clip">
       {/* Main Responsive Experience */}
       <div className="flex-1 flex flex-col w-full min-w-0">
         <Navbar
@@ -252,7 +253,7 @@ function AppContent() {
           setSelectedCounty={setSelectedCounty}
         />
 
-        <main className="flex-1 max-w-7xl mx-auto w-full px-3.5 sm:px-6 lg:px-8 pt-3 sm:pt-5 pb-24 md:pb-14 min-w-0 overflow-x-hidden">
+        <main className="flex-1 max-w-7xl mx-auto w-full px-3.5 sm:px-6 lg:px-8 pt-3 sm:pt-5 pb-24 md:pb-14 min-w-0 overflow-x-clip">
           {renderCurrentContent(false)}
         </main>
 
@@ -289,7 +290,9 @@ export default function App() {
       <LanguageProvider>
         <AuthProvider>
           <FarmProvider>
-            <AppContent />
+            <RealtimeProvider>
+              <AppContent />
+            </RealtimeProvider>
           </FarmProvider>
         </AuthProvider>
       </LanguageProvider>

@@ -343,7 +343,7 @@ export const AgriReelsFeed: React.FC<AgriReelsFeedProps> = ({
     setUploadModalOpen(false);
     setNewTitle('');
     setNewCaption('');
-    showToast('Your agricultural reel is live! 🎬');
+    showToast('Your agricultural clip is live! 🎬');
   };
 
   return (
@@ -590,7 +590,7 @@ export const AgriReelsFeed: React.FC<AgriReelsFeedProps> = ({
                   <Play className="w-4 h-4 fill-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm font-serif">Create AgriReel / Photo Story</h3>
+                  <h3 className="font-bold text-sm font-serif">Create Clip / Photo Story</h3>
                   <p className="text-[11px] text-stone-500">Short farming video or field tutorial</p>
                 </div>
               </div>
@@ -615,7 +615,7 @@ export const AgriReelsFeed: React.FC<AgriReelsFeedProps> = ({
                   }`}
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Video Reel</span>
+                  <span>Video Clip</span>
                 </button>
                 <button
                   type="button"

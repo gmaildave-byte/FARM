@@ -3,7 +3,7 @@ import {
   Home,
   Compass,
   Plus,
-  ShoppingBag,
+  Users,
   User
 } from 'lucide-react';
 import { Page } from '../types';
@@ -26,9 +26,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       icon: Home,
     },
     {
-      id: 'discover' as Page,
-      label: 'Discover',
-      icon: Compass,
+      id: 'community' as Page,
+      label: 'Community',
+      icon: Users,
     },
     {
       id: 'create' as const,
@@ -37,9 +37,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       icon: Plus,
     },
     {
-      id: 'marketplace' as Page,
-      label: 'Marketplace',
-      icon: ShoppingBag,
+      id: 'discover' as Page,
+      label: 'Discover',
+      icon: Compass,
     },
     {
       id: 'profile' as Page,
@@ -75,7 +75,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             (tab.id === 'home' &&
               !['discover', 'marketplace', 'profile', 'community'].includes(currentPage)) ||
             (tab.id === 'discover' &&
-              ['crops', 'livestock', 'soil-water', 'pests', 'weather', 'calculators', 'learning', 'suppliers', 'ai-assistant', 'markets'].includes(currentPage));
+              ['crops', 'livestock', 'soil-water', 'pests', 'weather', 'calculators', 'learning', 'suppliers', 'ai-assistant', 'markets', 'marketplace'].includes(currentPage));
 
           const IconComponent = tab.icon;
 

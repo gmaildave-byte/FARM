@@ -34,6 +34,7 @@ import { ShareSheetModal } from '../components/ShareSheetModal';
 import { ReportModal } from '../components/ReportModal';
 import { AgriStoriesBar } from '../components/AgriStoriesBar';
 import { AgriReelsFeed } from '../components/AgriReelsFeed';
+import { useRealtime, useRealtimeSubscription } from '../context/RealtimeContext';
 
 interface CommunityPageProps {
   isMobileFrame?: boolean;
@@ -87,6 +88,40 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
   const [expandedThreads, setExpandedThreads] = useState<Record<string, boolean>>({});
   const [visibleCommentsCount, setVisibleCommentsCount] = useState<Record<string, number>>({});
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const { broadcast } = useRealtime();
+
+  // Real-time synchronization subscriptions
+  useRealtimeSubscription<ForumPost>('community_post', (event) => {
+    if (!event.payload) return;
+    setPosts((prev) => {
+      if (prev.some((p) => p.id === event.payload.id)) return prev;
+      return [event.payload, ...prev];
+    });
+  });
+
+  useRealtimeSubscription<{ postId: string; reply: any }>('comment_reply', (event) => {
+    if (!event.payload || !event.payload.postId) return;
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id === event.payload.postId) {
+          if (p.replies.some((r) => r.id === event.payload.reply.id)) return p;
+          return {
+            ...p,
+            replies: [...p.replies, event.payload.reply],
+            commentsCount: (p.commentsCount || p.replies.length) + 1,
+          };
+        }
+        return p;
+      })
+    );
+  });
+
+  useRealtimeSubscription<{ postId: string; likes: number }>('post_like', (event) => {
+    if (!event.payload || !event.payload.postId) return;
+    setPosts((prev) =>
+      prev.map((p) => (p.id === event.payload.postId ? { ...p, likes: event.payload.likes } : p))
+    );
+  });
 
   // Comment Editing
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
@@ -148,6 +183,9 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
   const handleToggleLike = (postId: string) => {
     setLikedPosts((prev) => {
       const currentlyLiked = !prev[postId];
+      const targetPost = posts.find((p) => p.id === postId);
+      const newLikes = currentlyLiked ? (targetPost?.likes || 0) + 1 : Math.max(0, (targetPost?.likes || 1) - 1);
+      broadcast('post_like', { postId, likes: newLikes });
       setPosts((currentList) =>
         currentList.map((p) => {
           if (p.id === postId) {
@@ -279,6 +317,7 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
 
     setReplyingToTarget(null);
     setIsSubmittingComment(false);
+    broadcast('comment_reply', { postId, reply: newReply });
     showToast('Reply published to discussion thread! 🌱');
   };
 
@@ -417,6 +456,7 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({
     };
 
     setPosts([newPost, ...posts]);
+    broadcast('community_post', newPost);
     setIsNewPostOpen(false);
     setPostCaption('');
     showToast('Your agricultural update has been shared! 🌱');

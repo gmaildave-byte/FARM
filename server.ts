@@ -477,6 +477,92 @@ app.post('/api/reports/resolve', (req, res) => {
   res.status(404).json({ error: 'Report not found' });
 });
 
+// ==========================================
+// REAL-TIME SERVER-SENT EVENTS (SSE) & EVENT BUS
+// ==========================================
+
+interface RealtimeEvent {
+  id: string;
+  type: 'community_post' | 'comment_reply' | 'post_like' | 'chat_message' | 'marketplace_listing' | 'notification' | 'listing_status';
+  payload: any;
+  timestamp: string;
+}
+
+let serverRealtimeEvents: RealtimeEvent[] = [];
+const sseClients = new Set<express.Response>();
+
+function broadcastRealtime(event: RealtimeEvent) {
+  serverRealtimeEvents.unshift(event);
+  if (serverRealtimeEvents.length > 500) {
+    serverRealtimeEvents = serverRealtimeEvents.slice(0, 500);
+  }
+
+  const payload = `data: ${JSON.stringify(event)}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.write(payload);
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}
+
+// SSE Connection Endpoint
+app.get('/api/realtime/stream', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+
+  res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`);
+  sseClients.add(res);
+
+  // Heartbeat ping every 25 seconds
+  const pingInterval = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch {
+      clearInterval(pingInterval);
+      sseClients.delete(res);
+    }
+  }, 25000);
+
+  req.on('close', () => {
+    clearInterval(pingInterval);
+    sseClients.delete(res);
+  });
+});
+
+// Broadcast endpoint for real-time actions
+app.post('/api/realtime/broadcast', (req, res) => {
+  const { type, payload } = req.body;
+  if (!type) {
+    return res.status(400).json({ error: 'Event type required' });
+  }
+
+  const event: RealtimeEvent = {
+    id: `ev-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    type,
+    payload,
+    timestamp: new Date().toISOString(),
+  };
+
+  broadcastRealtime(event);
+  res.json({ success: true, eventId: event.id });
+});
+
+// Query events since a timestamp (for reconnect catch-up)
+app.get('/api/realtime/events', (req, res) => {
+  const since = req.query.since as string;
+  if (!since) {
+    return res.json({ events: serverRealtimeEvents.slice(0, 30) });
+  }
+  const filtered = serverRealtimeEvents.filter((ev) => ev.timestamp > since);
+  res.json({ events: filtered });
+});
+
 // Domain Agronomy Fallback Generator
 function generateAgronomicFallbackAnswer(
   question: string,

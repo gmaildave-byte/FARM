@@ -6,12 +6,20 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   MapPin,
   ShieldCheck,
   MessageSquare,
   Bell,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  BookOpen,
+  GraduationCap,
+  Briefcase,
+  Info,
+  FileText,
+  Calendar
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -77,9 +85,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState('KES');
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const roleMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -115,6 +129,75 @@ export const Navbar: React.FC<NavbarProps> = ({
     { page: 'about', label: 'About' },
   ];
 
+  // Secondary & overflow items for accessible quick-jump dropdown
+  const overflowNavItems: { page: Page; label: string; icon: any; desc: string }[] = [
+    { page: 'farm-manager', label: 'Farm Manager', icon: Calendar, desc: 'Crop blocks, seasonal activity logs & financials' },
+    { page: 'learning', label: 'Learning Centre', icon: BookOpen, desc: 'Certified agronomic masterclasses & tutorials' },
+    { page: 'expert', label: 'Ask Expert', icon: GraduationCap, desc: 'Direct consults with verified agronomists & vets' },
+    { page: 'opportunities', label: 'Grants & Jobs', icon: Briefcase, desc: 'Agricultural funding, tenders & vacancies' },
+    ...(role === 'admin' || role === 'editor' || role === 'moderator'
+      ? [{ page: 'admin-cms' as Page, label: 'Admin CMS', icon: ShieldCheck, desc: 'Adams Kipkoech Kering system administration' }]
+      : []),
+    { page: 'about', label: 'About AgriHub', icon: Info, desc: 'Platform mission, founder & development' },
+    { page: 'legal', label: 'Terms & Privacy', icon: FileText, desc: 'Data protection & marketplace trade guidelines' },
+  ];
+
+  // Monitor window scroll to optimize sticky header appearance
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 25);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Monitor category scroll boundaries
+  const checkCategoryScroll = () => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const tolerance = 4;
+    setCanScrollLeft(el.scrollLeft > tolerance);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - tolerance);
+  };
+
+  useEffect(() => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    checkCategoryScroll();
+    const t1 = setTimeout(checkCategoryScroll, 100);
+    const t2 = setTimeout(checkCategoryScroll, 400);
+    el.addEventListener('scroll', checkCategoryScroll, { passive: true });
+    window.addEventListener('resize', checkCategoryScroll);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      el.removeEventListener('scroll', checkCategoryScroll);
+      window.removeEventListener('resize', checkCategoryScroll);
+    };
+  }, [primaryNav.length]);
+
+  // Scroll active category into view automatically whenever page changes
+  useEffect(() => {
+    if (!categoryScrollRef.current) return;
+    const activeBtn = categoryScrollRef.current.querySelector<HTMLElement>(`[data-nav-page="${currentPage}"]`);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+    // Update scroll buttons state after smooth scroll completes
+    setTimeout(checkCategoryScroll, 350);
+  }, [currentPage]);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const scrollAmount = Math.max(300, Math.floor(el.clientWidth * 0.75));
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+    setTimeout(checkCategoryScroll, 350);
+  };
+
   // Handle ESC key to close active dropdowns
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,6 +205,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         setRoleMenuOpen(false);
         setNotificationsOpen(false);
         setMobileMenuOpen(false);
+        setMoreMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -136,6 +220,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       }
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setNotificationsOpen(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -580,35 +667,158 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* 3. DESKTOP PRIMARY CATEGORY RIBBON */}
+      {/* 3. RESPONSIVE CATEGORY NAVIGATION RIBBON WITH SCROLL CONTROLS & MORE MENU */}
       <nav
-        className="hidden lg:block border-t border-stone-100 bg-[#FAF7F0] text-xs font-medium text-stone-700 relative z-10"
-        aria-label="Primary Categories Navigation"
+        className="block border-t border-stone-200/90 bg-[#FAF7F0] text-xs font-medium text-stone-700 relative z-20 select-none"
+        aria-label="Agricultural Categories Navigation"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto no-scrollbar py-1">
-          <div className="flex items-center gap-1 shrink-0">
-            {primaryNav.map((item) => (
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 relative flex items-center">
+          {/* Left Scroll Navigation Button (with fade gradient) */}
+          {canScrollLeft && (
+            <div className="absolute left-0 top-0 bottom-0 z-30 flex items-center bg-gradient-to-r from-[#FAF7F0] via-[#FAF7F0]/90 to-transparent pr-4 pl-1 pointer-events-none">
               <button
-                key={item.page}
                 type="button"
-                onClick={() => setCurrentPage(item.page)}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors focus-visible:ring-1 focus-visible:ring-[#183D29] ${
-                  currentPage === item.page
-                    ? 'bg-[#183D29] text-white font-bold shadow-xs'
-                    : 'hover:text-[#183D29] hover:bg-stone-200/60'
-                }`}
+                onClick={() => scrollCategories('left')}
+                className="w-7 h-7 rounded-full bg-white shadow-md border border-stone-200 text-stone-700 hover:text-emerald-900 hover:bg-emerald-50 flex items-center justify-center transition active:scale-95 pointer-events-auto cursor-pointer"
+                aria-label="Scroll categories left"
               >
-                {item.label}
+                <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
               </button>
-            ))}
+            </div>
+          )}
+
+          {/* Horizontally Scrollable Category Items Container */}
+          <div
+            ref={categoryScrollRef}
+            onWheel={(e) => {
+              if (categoryScrollRef.current && (e.deltaY !== 0 || e.deltaX !== 0)) {
+                if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                  categoryScrollRef.current.scrollLeft += e.deltaY;
+                }
+              }
+            }}
+            className="flex-1 flex items-center gap-1 overflow-x-auto no-scrollbar py-1.5 scroll-smooth overscroll-x-contain min-w-0 pr-4"
+          >
+            {primaryNav.map((item) => {
+              const isActive = currentPage === item.page;
+              return (
+                <button
+                  key={item.page}
+                  data-nav-page={item.page}
+                  type="button"
+                  onClick={() => setCurrentPage(item.page)}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all duration-150 shrink-0 text-[11.5px] sm:text-xs font-semibold focus-visible:ring-2 focus-visible:ring-[#183D29] cursor-pointer ${
+                    isActive
+                      ? 'bg-[#183D29] text-white font-bold shadow-xs'
+                      : 'text-stone-700 hover:text-[#183D29] hover:bg-stone-200/60'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right Scroll Navigation Button & More Overflow Menu */}
+          <div className="flex items-center shrink-0 pl-1 z-40 gap-1.5" ref={moreMenuRef}>
+            {canScrollRight && (
+              <button
+                type="button"
+                onClick={() => scrollCategories('right')}
+                className="h-7 px-2.5 rounded-lg bg-emerald-800 text-white hover:bg-emerald-900 text-[11px] font-bold flex items-center gap-1 shadow-xs transition active:scale-95 cursor-pointer"
+                title="Scroll horizontally to see Farm Manager, Learning Centre, Ask Expert, Grants & Jobs, and About"
+                aria-label="Scroll categories right"
+              >
+                <span className="hidden xl:inline text-[11px]">More sections</span>
+                <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+            )}
+
+            {/* More ▾ Overflow Dropdown Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                aria-expanded={moreMenuOpen}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-bold text-[11px] sm:text-xs transition border cursor-pointer ${
+                  moreMenuOpen || overflowNavItems.some((o) => o.page === currentPage)
+                    ? 'bg-emerald-800 text-white border-emerald-900 shadow-xs'
+                    : 'bg-white/90 text-stone-800 border-stone-200 hover:bg-white hover:text-emerald-900 shadow-2xs'
+                }`}
+                aria-label="More agricultural sections"
+              >
+                <span>More</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    moreMenuOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+            {moreMenuOpen && (
+              <div
+                className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-2xl shadow-2xl border border-stone-200 py-2 z-50 animate-in fade-in zoom-in-95 overflow-hidden text-stone-800"
+                role="menu"
+              >
+                <div className="px-3.5 py-1.5 border-b border-stone-100 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  <span>Additional Sections</span>
+                  <span className="text-emerald-700 font-semibold lowercase">Adams Kipkoech Kering</span>
+                </div>
+                <div className="divide-y divide-stone-100 max-h-80 overflow-y-auto">
+                  {overflowNavItems.map((item, idx) => {
+                    const Icon = item.icon;
+                    const isItemActive = currentPage === item.page;
+                    return (
+                      <button
+                        key={item.page}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setCurrentPage(item.page);
+                          setMoreMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 text-xs hover:bg-stone-50 transition flex items-start gap-2.5 cascade-item cascade-stagger-${Math.min(
+                          idx + 1,
+                          8
+                        )} ${isItemActive ? 'bg-emerald-50 text-emerald-950 font-bold' : ''}`}
+                      >
+                        <div
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                            isItemActive
+                              ? 'bg-emerald-800 text-white'
+                              : 'bg-stone-100 text-stone-600 group-hover:text-emerald-800'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-stone-900 text-xs">
+                              {item.label}
+                            </span>
+                            {isItemActive && (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-[10px] text-stone-500 leading-tight mt-0.5">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            </div>
           </div>
         </div>
       </nav>
 
-      {/* 4. MOBILE DRAWER MENU */}
+      {/* 4. MOBILE STRUCTURED DRAWER MENU */}
       {mobileMenuOpen && (
         <div
-          className="lg:hidden bg-white border-t border-stone-200 px-4 py-4 space-y-3 max-h-[82vh] overflow-y-auto shadow-xl animate-in slide-in-from-top-2 duration-200"
+          className="lg:hidden bg-white border-t border-stone-200 px-4 py-4 space-y-3.5 max-h-[82vh] overflow-y-auto shadow-xl animate-in slide-in-from-top-2 duration-200"
           role="dialog"
           aria-label="Mobile Navigation Menu"
         >
@@ -636,28 +846,132 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
           </div>
 
-          <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-3 py-1">
-            Platform Navigation
-          </div>
+          {/* Categorized Mobile Navigation Grid */}
+          <div className="space-y-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 px-1 mb-1.5">
+                Core Social & Trade
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { page: 'home' as Page, label: 'Home Feed' },
+                  { page: 'community' as Page, label: 'Community' },
+                  { page: 'messages' as Page, label: 'Farmer Chat' },
+                  { page: 'marketplace' as Page, label: 'Marketplace' },
+                ].map((item) => (
+                  <button
+                    key={item.page}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(item.page);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                      currentPage === item.page
+                        ? 'bg-[#183D29] text-white font-bold shadow-xs'
+                        : 'bg-stone-50 text-stone-800 hover:bg-stone-100'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {primaryNav.map((item) => (
-              <button
-                key={item.page}
-                type="button"
-                onClick={() => {
-                  setCurrentPage(item.page);
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition ${
-                  currentPage === item.page
-                    ? 'bg-[#183D29] text-white font-bold shadow-2xs'
-                    : 'text-stone-700 hover:bg-stone-100'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 px-1 mb-1.5">
+                Agronomic Production Guides
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { page: 'crops' as Page, label: 'Crops Guide' },
+                  { page: 'livestock' as Page, label: 'Livestock Care' },
+                  { page: 'soil-water' as Page, label: 'Soil & Water' },
+                  { page: 'pests' as Page, label: 'Pests & IPM' },
+                  { page: 'weather' as Page, label: 'Weather & Climate' },
+                ].map((item) => (
+                  <button
+                    key={item.page}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(item.page);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                      currentPage === item.page
+                        ? 'bg-[#183D29] text-white font-bold shadow-xs'
+                        : 'bg-stone-50 text-stone-800 hover:bg-stone-100'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 px-1 mb-1.5">
+                Farm Management & Tools
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { page: 'calculators' as Page, label: '26 Farming Calculators' },
+                  { page: 'markets' as Page, label: 'Price Benchmarks' },
+                  { page: 'suppliers' as Page, label: 'Inputs Directory' },
+                  { page: 'farm-manager' as Page, label: 'Farm Manager' },
+                ].map((item) => (
+                  <button
+                    key={item.page}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(item.page);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                      currentPage === item.page
+                        ? 'bg-[#183D29] text-white font-bold shadow-xs'
+                        : 'bg-stone-50 text-stone-800 hover:bg-stone-100'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 px-1 mb-1.5">
+                Resources & Platform
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { page: 'learning' as Page, label: 'Learning Centre' },
+                  { page: 'expert' as Page, label: 'Ask Expert' },
+                  { page: 'opportunities' as Page, label: 'Grants & Jobs' },
+                  ...(role === 'admin' || role === 'editor' || role === 'moderator'
+                    ? [{ page: 'admin-cms' as Page, label: 'Admin CMS' }]
+                    : []),
+                  { page: 'about' as Page, label: 'About AgriHub' },
+                  { page: 'legal' as Page, label: 'Terms & Privacy' },
+                ].map((item) => (
+                  <button
+                    key={item.page}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(item.page);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                      currentPage === item.page
+                        ? 'bg-[#183D29] text-white font-bold shadow-xs'
+                        : 'bg-stone-50 text-stone-800 hover:bg-stone-100'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

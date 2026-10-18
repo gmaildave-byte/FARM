@@ -29,6 +29,7 @@ import { kenyanCounties } from '../components/Navbar';
 import { PromotionModal } from '../components/PromotionModal';
 import { SubscriptionModal } from '../components/SubscriptionModal';
 import { ReportModal } from '../components/ReportModal';
+import { useRealtime, useRealtimeSubscription } from '../context/RealtimeContext';
 
 interface MarketplacePageProps {
   onSelectSellerProfile?: (username: string) => void;
@@ -36,7 +37,17 @@ interface MarketplacePageProps {
 
 export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSellerProfile }) => {
   const { user, isAuthenticated } = useAuth();
+  const { broadcast } = useRealtime();
   const [listings, setListings] = useState<MarketplaceListing[]>(initialMarketplaceListings);
+
+  // Live real-time subscription for new product listings
+  useRealtimeSubscription<MarketplaceListing>('marketplace_listing', (event) => {
+    if (!event.payload) return;
+    setListings((prev) => {
+      if (prev.some((it) => it.id === event.payload.id)) return prev;
+      return [event.payload, ...prev];
+    });
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedCounty, setSelectedCounty] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,9 +98,11 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
   const categories: { id: string; label: string }[] = [
     { id: 'all', label: 'All Products & Services' },
     { id: 'seeds', label: 'Seeds & Seedlings' },
-    { id: 'fertilizers', label: 'Fertilizers & Soil' },
+    { id: 'fertilizers', label: 'Fertilizers & Soil Health' },
+    { id: 'biological', label: 'Biological & IPM Pest Control' },
     { id: 'machinery', label: 'Farm Tools & Machinery' },
     { id: 'irrigation', label: 'Irrigation Equipment' },
+    { id: 'storage', label: 'Cold Storage & Post-Harvest' },
     { id: 'feeds', label: 'Animal Feeds' },
     { id: 'livestock', label: 'Livestock & Breeding' },
     { id: 'produce', label: 'Fresh Harvested Produce' },
@@ -165,6 +178,7 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
     };
 
     setListings([created, ...listings]);
+    broadcast('marketplace_listing', created);
     setCreateModalOpen(false);
     showToast('Marketplace listing published successfully!');
     // Reset
@@ -418,12 +432,12 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredListings.map((item) => {
+            {filteredListings.map((item, index) => {
               const isSaved = savedListingIds[item.id];
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition flex flex-col group"
+                  className={`bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition flex flex-col group cascade-item cascade-stagger-${Math.min((index % 8) + 1, 8)}`}
                 >
                   {/* Image Container */}
                   <div className="h-48 w-full overflow-hidden relative bg-stone-100">
@@ -865,8 +879,10 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onSelectSeller
                   >
                     <option value="seeds">Seeds & Seedlings</option>
                     <option value="fertilizers">Fertilizers & Soil Amendments</option>
+                    <option value="biological">Biological & IPM Pest Control</option>
                     <option value="machinery">Farm Tools & Machinery</option>
                     <option value="irrigation">Irrigation Equipment</option>
+                    <option value="storage">Cold Storage & Post-Harvest</option>
                     <option value="feeds">Animal Feeds & Supplies</option>
                     <option value="livestock">Livestock & Breeding</option>
                     <option value="produce">Fresh Harvested Produce</option>

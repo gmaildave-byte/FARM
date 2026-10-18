@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Page } from '../types';
+import { useRealtime, useRealtimeSubscription } from '../context/RealtimeContext';
 
 interface Message {
   id: string;
@@ -150,11 +151,30 @@ interface MessagesPageProps {
 
 export const MessagesPage: React.FC<MessagesPageProps> = ({ setCurrentPage }) => {
   const { user } = useAuth();
+  const { broadcast } = useRealtime();
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [activeConvId, setActiveConvId] = useState<string>('conv-1');
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileChatView, setIsMobileChatView] = useState(false);
+
+  // Real-time incoming chat messages
+  useRealtimeSubscription<{ convId: string; message: Message }>('chat_message', (event) => {
+    if (!event.payload || !event.payload.convId || !event.payload.message) return;
+    const { convId, message } = event.payload;
+    setConversations((list) =>
+      list.map((c) => {
+        if (c.id === convId) {
+          if (c.messages.some((m) => m.id === message.id)) return c;
+          return {
+            ...c,
+            messages: [...c.messages, { ...message, isSelf: message.senderName === user?.name }],
+          };
+        }
+        return c;
+      })
+    );
+  });
 
   const activeConv = conversations.find((c) => c.id === activeConvId) || conversations[0];
 
@@ -174,6 +194,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ setCurrentPage }) =>
     setConversations((list) =>
       list.map((c) => (c.id === activeConvId ? { ...c, messages: [...c.messages, newMsg] } : c))
     );
+    broadcast('chat_message', { convId: activeConvId, message: newMsg });
     setInputText('');
 
     // Simulated helpful agricultural autoreply if messaging Adams

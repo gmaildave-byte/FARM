@@ -391,8 +391,10 @@ export interface MarketPrice {
 export type MarketplaceCategory =
   | 'seeds'
   | 'fertilizers'
+  | 'biological'
   | 'machinery'
   | 'irrigation'
+  | 'storage'
   | 'feeds'
   | 'livestock'
   | 'produce'
